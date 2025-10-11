@@ -1,9 +1,7 @@
 import 'dart:io';
 
 class ApiConfig {
-  static String get baseUrl => Platform.isAndroid 
-    ? 'http://10.0.2.2:3000'
-    : 'http://localhost:3000';
+  static String get baseUrl => 'https://pregnancy-assistant-production.up.railway.app';
   
   static const Duration timeout = Duration(seconds: 30);
   
