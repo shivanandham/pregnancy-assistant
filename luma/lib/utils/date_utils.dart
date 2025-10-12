@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import '../services/device_timezone_service.dart';
 
 class DateUtils {
   static const int daysInWeek = 7;
@@ -7,20 +8,20 @@ class DateUtils {
 
   /// Calculate pregnancy week from last menstrual period
   static int calculatePregnancyWeek(DateTime lastMenstrualPeriod) {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     final daysSinceLMP = now.difference(lastMenstrualPeriod).inDays;
     return (daysSinceLMP / daysInWeek).floor() + 1;
   }
 
   /// Calculate days until due date
   static int calculateDaysUntilDueDate(DateTime dueDate) {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     return dueDate.difference(now).inDays;
   }
 
   /// Calculate days since last menstrual period
   static int calculateDaysSinceLMP(DateTime lastMenstrualPeriod) {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     return now.difference(lastMenstrualPeriod).inDays;
   }
 
@@ -34,7 +35,7 @@ class DateUtils {
   /// Calculate progress percentage
   static double calculateProgressPercentage(DateTime lastMenstrualPeriod, DateTime dueDate) {
     final totalDays = dueDate.difference(lastMenstrualPeriod).inDays;
-    final elapsedDays = DateTime.now().difference(lastMenstrualPeriod).inDays;
+    final elapsedDays = DeviceTimezoneService.now().difference(lastMenstrualPeriod).inDays;
     return (elapsedDays / totalDays).clamp(0.0, 1.0);
   }
 
@@ -55,13 +56,13 @@ class DateUtils {
 
   /// Check if date is today
   static bool isToday(DateTime date) {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     return date.year == now.year && date.month == now.month && date.day == now.day;
   }
 
   /// Check if date is in the past
   static bool isPast(DateTime date) {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     final today = DateTime(now.year, now.month, now.day);
     final checkDate = DateTime(date.year, date.month, date.day);
     return checkDate.isBefore(today);
@@ -69,7 +70,7 @@ class DateUtils {
 
   /// Check if date is in the future
   static bool isFuture(DateTime date) {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     final today = DateTime(now.year, now.month, now.day);
     final checkDate = DateTime(date.year, date.month, date.day);
     return checkDate.isAfter(today);
@@ -77,7 +78,7 @@ class DateUtils {
 
   /// Get relative time string (e.g., "2 days ago", "in 3 days")
   static String getRelativeTime(DateTime date) {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     final difference = date.difference(now).inDays;
     
     if (difference == 0) {

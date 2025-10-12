@@ -1,3 +1,5 @@
+import '../services/device_timezone_service.dart';
+
 class UserProfile {
   final String id;
   final double? height; // in cm
@@ -129,8 +131,8 @@ class UserProfile {
       lifestyle: json['lifestyle'] != null 
           ? Lifestyle.fromJson(json['lifestyle']) 
           : null,
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      createdAt: DeviceTimezoneService.toDeviceTimezone(DateTime.parse(json['createdAt'])),
+      updatedAt: DeviceTimezoneService.toDeviceTimezone(DateTime.parse(json['updatedAt'])),
     );
   }
 

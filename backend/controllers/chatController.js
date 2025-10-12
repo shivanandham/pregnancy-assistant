@@ -134,7 +134,7 @@ ${ChatController.loadPregnancyGuide()}
 
       // Build context-aware prompt with current time
       const currentTime = new Date();
-      const timeContext = `Current date and time: ${currentTime.toLocaleString('en-US', {
+      let timeContext = `Current date and time: ${currentTime.toLocaleString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -143,6 +143,11 @@ ${ChatController.loadPregnancyGuide()}
         minute: '2-digit',
         timeZoneName: 'short'
       })}`;
+      
+      // Add user's timezone if available
+      if (userProfile && userProfile.timezone) {
+        timeContext += `\nUser's timezone: ${userProfile.timezone}`;
+      }
       
       let systemPrompt = ChatController.getPregnancyContext(currentWeek);
       systemPrompt += `\n\n${timeContext}`;

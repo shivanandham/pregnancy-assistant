@@ -1,4 +1,6 @@
 
+import '../services/device_timezone_service.dart';
+
 class WeightEntry {
   final String id;
   final double weight; // in kg
@@ -33,9 +35,9 @@ class WeightEntry {
     return WeightEntry(
       id: json['id'] ?? '',
       weight: (json['weight'] ?? 0.0).toDouble(),
-      dateTime: DateTime.parse(json['dateTime']),
+      dateTime: DeviceTimezoneService.toDeviceTimezone(DateTime.parse(json['dateTime'])),
       notes: json['notes'],
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: DeviceTimezoneService.toDeviceTimezone(DateTime.parse(json['createdAt'])),
     );
   }
 

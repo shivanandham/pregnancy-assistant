@@ -3,6 +3,7 @@ import '../models/symptom.dart';
 import '../models/appointment.dart';
 import '../models/weight_entry.dart';
 import '../services/api_service.dart';
+import '../services/device_timezone_service.dart';
 
 class TrackerProvider with ChangeNotifier {
   // Symptoms
@@ -44,7 +45,7 @@ class TrackerProvider with ChangeNotifier {
   }
 
   List<Appointment> get todayAppointments {
-    final today = DateTime.now();
+    final today = DeviceTimezoneService.now();
     return _appointments.where((appointment) {
       return appointment.dateTime.year == today.year &&
           appointment.dateTime.month == today.month &&

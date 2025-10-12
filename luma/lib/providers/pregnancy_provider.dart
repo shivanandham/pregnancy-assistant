@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/pregnancy.dart';
 import '../services/api_service.dart';
+import '../services/device_timezone_service.dart';
 import '../utils/date_utils.dart';
 
 class PregnancyProvider with ChangeNotifier {
@@ -68,11 +69,11 @@ class PregnancyProvider with ChangeNotifier {
 
     try {
       final pregnancy = Pregnancy(
-        id: _pregnancy?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id: _pregnancy?.id ?? DeviceTimezoneService.now().millisecondsSinceEpoch.toString(),
         dueDate: dueDate,
         lastMenstrualPeriod: lastMenstrualPeriod,
-        createdAt: _pregnancy?.createdAt ?? DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: _pregnancy?.createdAt ?? DeviceTimezoneService.now(),
+        updatedAt: DeviceTimezoneService.now(),
         notes: notes,
       );
 
@@ -111,7 +112,7 @@ class PregnancyProvider with ChangeNotifier {
         dueDate: dueDate,
         lastMenstrualPeriod: lastMenstrualPeriod,
         notes: notes,
-        updatedAt: DateTime.now(),
+        updatedAt: DeviceTimezoneService.now(),
       );
 
       final savedPregnancy = await ApiService.savePregnancyData(updatedPregnancy);

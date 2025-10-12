@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../providers/chat_session_provider.dart';
 import '../models/chat_session.dart';
 import '../theme/app_theme.dart';
-import 'chatbot_screen.dart';
+import '../services/device_timezone_service.dart';
 
 class ChatHistoryScreen extends StatefulWidget {
   const ChatHistoryScreen({super.key});
@@ -345,7 +344,7 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
   }
 
   String _getTimeAgo(DateTime dateTime) {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     final difference = now.difference(dateTime);
 
     if (difference.inDays > 0) {

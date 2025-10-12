@@ -1,3 +1,5 @@
+import '../services/device_timezone_service.dart';
+
 class Pregnancy {
   final String id;
   final DateTime dueDate;
@@ -17,14 +19,14 @@ class Pregnancy {
 
   // Calculate current week of pregnancy
   int get currentWeek {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     final daysSinceLMP = now.difference(lastMenstrualPeriod).inDays;
     return (daysSinceLMP / 7).floor() + 1;
   }
 
   // Calculate days until due date
   int get daysUntilDueDate {
-    final now = DateTime.now();
+    final now = DeviceTimezoneService.now();
     return dueDate.difference(now).inDays;
   }
 
@@ -38,7 +40,7 @@ class Pregnancy {
   // Get progress percentage
   double get progressPercentage {
     final totalDays = dueDate.difference(lastMenstrualPeriod).inDays;
-    final elapsedDays = DateTime.now().difference(lastMenstrualPeriod).inDays;
+    final elapsedDays = DeviceTimezoneService.now().difference(lastMenstrualPeriod).inDays;
     return (elapsedDays / totalDays).clamp(0.0, 1.0);
   }
 

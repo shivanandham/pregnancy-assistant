@@ -1,4 +1,6 @@
 
+import '../services/device_timezone_service.dart';
+
 enum AppointmentType {
   prenatal,
   ultrasound,
@@ -38,11 +40,11 @@ class Appointment {
   }
 
   bool get isUpcoming {
-    return dateTime.isAfter(DateTime.now()) && !isCompleted;
+    return dateTime.isAfter(DeviceTimezoneService.now()) && !isCompleted;
   }
 
   bool get isPast {
-    return dateTime.isBefore(DateTime.now()) || isCompleted;
+    return dateTime.isBefore(DeviceTimezoneService.now()) || isCompleted;
   }
 
   Map<String, dynamic> toJson() {
@@ -68,13 +70,13 @@ class Appointment {
         (e) => e.name == json['type'],
         orElse: () => AppointmentType.other,
       ),
-      dateTime: DateTime.parse(json['dateTime']),
+      dateTime: DeviceTimezoneService.toDeviceTimezone(DateTime.parse(json['dateTime'])),
       location: json['location'],
       doctor: json['doctor'],
       notes: json['notes'],
       isCompleted: json['isCompleted'] ?? false,
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      createdAt: DeviceTimezoneService.toDeviceTimezone(DateTime.parse(json['createdAt'])),
+      updatedAt: DeviceTimezoneService.toDeviceTimezone(DateTime.parse(json['updatedAt'])),
     );
   }
 

@@ -9,6 +9,7 @@ import '../widgets/progress_card.dart';
 import '../widgets/quick_action_card.dart';
 import '../widgets/upcoming_appointments_card.dart';
 import '../config/api_config.dart';
+import '../services/device_timezone_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -107,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               Text(
-                                DateFormat('EEEE, MMM dd').format(DateTime.now()),
+                                DateFormat('EEEE, MMM dd').format(DeviceTimezoneService.now()),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.white70,
@@ -317,9 +318,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () async {
                               final date = await showDatePicker(
                                 context: context,
-                                initialDate: DateTime.now().subtract(const Duration(days: 14)),
-                                firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                                lastDate: DateTime.now(),
+                                initialDate: DeviceTimezoneService.now().subtract(const Duration(days: 14)),
+                                firstDate: DeviceTimezoneService.now().subtract(const Duration(days: 365)),
+                                lastDate: DeviceTimezoneService.now(),
                               );
                               if (date != null) {
                                 _selectedLMP = date;
@@ -356,9 +357,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () async {
                               final date = await showDatePicker(
                                 context: context,
-                                initialDate: _selectedDueDate ?? DateTime.now().add(const Duration(days: 266)),
-                                firstDate: DateTime.now(),
-                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                                initialDate: _selectedDueDate ?? DeviceTimezoneService.now().add(const Duration(days: 266)),
+                                firstDate: DeviceTimezoneService.now(),
+                                lastDate: DeviceTimezoneService.now().add(const Duration(days: 365)),
                               );
                               if (date != null) {
                                 _selectedDueDate = date;

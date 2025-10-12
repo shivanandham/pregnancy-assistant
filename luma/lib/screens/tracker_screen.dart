@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../providers/tracker_provider.dart';
 import '../models/symptom.dart';
 import '../models/weight_entry.dart';
 import '../models/appointment.dart';
 import '../theme/app_theme.dart';
 import '../utils/date_utils.dart' as CustomDateUtils;
+import '../services/device_timezone_service.dart';
 
 class TrackerScreen extends StatefulWidget {
   const TrackerScreen({super.key});
@@ -382,7 +382,7 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
                   // Update appointment completion status
                   final updatedAppointment = appointment.copyWith(
                     isCompleted: value ?? false,
-                    updatedAt: DateTime.now(),
+                    updatedAt: DeviceTimezoneService.now(),
                   );
                   trackerProvider.updateAppointment(appointment.id, updatedAppointment);
                 },
@@ -517,7 +517,7 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
   void _showAddSymptomDialog(TrackerProvider trackerProvider) {
     SymptomType selectedType = SymptomType.nausea;
     SeverityLevel selectedSeverity = SeverityLevel.mild;
-    DateTime selectedDate = DateTime.now();
+    DateTime selectedDate = DeviceTimezoneService.now();
     final notesController = TextEditingController();
 
     showDialog(
@@ -569,8 +569,8 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
                     final date = await showDatePicker(
                       context: context,
                       initialDate: selectedDate,
-                      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                      lastDate: DateTime.now(),
+                      firstDate: DeviceTimezoneService.now().subtract(const Duration(days: 30)),
+                      lastDate: DeviceTimezoneService.now(),
                     );
                     if (date != null) {
                       final time = await showTimePicker(
@@ -611,12 +611,12 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
             ElevatedButton(
               onPressed: () {
                 final symptom = Symptom(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  id: DeviceTimezoneService.now().millisecondsSinceEpoch.toString(),
                   type: selectedType,
                   severity: selectedSeverity,
                   dateTime: selectedDate,
                   notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
-                  createdAt: DateTime.now(),
+                  createdAt: DeviceTimezoneService.now(),
                 );
                 trackerProvider.addSymptom(symptom);
                 Navigator.of(context).pop();
@@ -631,7 +631,7 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
 
   void _showAddWeightDialog(TrackerProvider trackerProvider) {
     final weightController = TextEditingController();
-    DateTime selectedDate = DateTime.now();
+    DateTime selectedDate = DeviceTimezoneService.now();
     final notesController = TextEditingController();
 
     showDialog(
@@ -661,8 +661,8 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
                     final date = await showDatePicker(
                       context: context,
                       initialDate: selectedDate,
-                      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                      lastDate: DateTime.now(),
+                      firstDate: DeviceTimezoneService.now().subtract(const Duration(days: 365)),
+                      lastDate: DeviceTimezoneService.now(),
                     );
                     if (date != null) {
                       setState(() => selectedDate = date);
@@ -691,11 +691,11 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
                 final weight = double.tryParse(weightController.text);
                 if (weight != null && weight > 0) {
                   final weightEntry = WeightEntry(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    id: DeviceTimezoneService.now().millisecondsSinceEpoch.toString(),
                     weight: weight,
                     dateTime: selectedDate,
                     notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
-                    createdAt: DateTime.now(),
+                    createdAt: DeviceTimezoneService.now(),
                   );
                   trackerProvider.addWeightEntry(weightEntry);
                   Navigator.of(context).pop();
@@ -716,7 +716,7 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
   void _showAddAppointmentDialog(TrackerProvider trackerProvider) {
     final titleController = TextEditingController();
     AppointmentType selectedType = AppointmentType.prenatal;
-    DateTime selectedDate = DateTime.now();
+    DateTime selectedDate = DeviceTimezoneService.now();
     final locationController = TextEditingController();
     final doctorController = TextEditingController();
     final notesController = TextEditingController();
@@ -762,8 +762,8 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
                     final date = await showDatePicker(
                       context: context,
                       initialDate: selectedDate,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      firstDate: DeviceTimezoneService.now(),
+                      lastDate: DeviceTimezoneService.now().add(const Duration(days: 365)),
                     );
                     if (date != null) {
                       final time = await showTimePicker(
@@ -821,7 +821,7 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
               onPressed: () {
                 if (titleController.text.trim().isNotEmpty) {
                   final appointment = Appointment(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    id: DeviceTimezoneService.now().millisecondsSinceEpoch.toString(),
                     title: titleController.text.trim(),
                     type: selectedType,
                     dateTime: selectedDate,
@@ -829,8 +829,8 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
                     doctor: doctorController.text.trim().isEmpty ? null : doctorController.text.trim(),
                     notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
                     isCompleted: false,
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
+                    createdAt: DeviceTimezoneService.now(),
+                    updatedAt: DeviceTimezoneService.now(),
                   );
                   trackerProvider.addAppointment(appointment);
                   Navigator.of(context).pop();

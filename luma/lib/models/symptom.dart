@@ -1,3 +1,5 @@
+import '../services/device_timezone_service.dart';
+
 enum SymptomType {
   nausea,
   fatigue,
@@ -82,7 +84,10 @@ class Symptom {
           final timestamp = double.parse(dateValue);
           return DateTime.fromMillisecondsSinceEpoch(timestamp.toInt());
         }
-        return DateTime.parse(dateValue);
+        
+        // Parse the UTC datetime and convert to device timezone
+        final utcDateTime = DateTime.parse(dateValue);
+        return DeviceTimezoneService.toDeviceTimezone(utcDateTime);
       } else if (dateValue is int) {
         return DateTime.fromMillisecondsSinceEpoch(dateValue);
       } else if (dateValue is double) {
@@ -92,7 +97,7 @@ class Symptom {
       print('Error parsing date: $dateValue, error: $e');
     }
     // Fallback to current time if parsing fails
-    return DateTime.now();
+    return DeviceTimezoneService.now();
   }
 
   Symptom copyWith({

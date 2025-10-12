@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/user_profile.dart';
 import '../services/api_service.dart';
+import '../services/device_timezone_service.dart';
 
 class UserProfileProvider with ChangeNotifier {
   UserProfile? _profile;
@@ -26,6 +27,15 @@ class UserProfileProvider with ChangeNotifier {
 
     try {
       _profile = await ApiService.getUserProfile();
+      
+      // Update timezone if not set or different from device
+      if (_profile != null && DeviceTimezoneService.isInitialized) {
+        final deviceTimezone = DeviceTimezoneService.getTimezoneName();
+        if (_profile!.timezone != deviceTimezone) {
+          await _updateTimezone(deviceTimezone);
+        }
+      }
+      
       notifyListeners();
     } catch (e) {
       _setError('Failed to load profile: $e');
@@ -167,5 +177,22 @@ class UserProfileProvider with ChangeNotifier {
 
   void _clearError() {
     _error = null;
+  }
+
+  // Update timezone in user profile
+  Future<void> _updateTimezone(String timezone) async {
+    if (_profile == null) return;
+
+    try {
+      final updates = {'timezone': timezone};
+      final updatedProfile = await ApiService.updateUserProfile(updates);
+      if (updatedProfile != null) {
+        _profile = updatedProfile;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to update timezone: $e');
+      }
+    }
   }
 }

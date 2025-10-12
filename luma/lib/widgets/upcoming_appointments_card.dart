@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/appointment.dart';
 import '../theme/app_theme.dart';
+import '../services/device_timezone_service.dart';
 
 class UpcomingAppointmentsCard extends StatelessWidget {
   final List<Appointment> appointments;
@@ -62,13 +63,13 @@ class UpcomingAppointmentsCard extends StatelessWidget {
   }
 
   Widget _buildAppointmentItem(Appointment appointment) {
-    final isToday = appointment.dateTime.day == DateTime.now().day &&
-        appointment.dateTime.month == DateTime.now().month &&
-        appointment.dateTime.year == DateTime.now().year;
+    final isToday = appointment.dateTime.day == DeviceTimezoneService.now().day &&
+        appointment.dateTime.month == DeviceTimezoneService.now().month &&
+        appointment.dateTime.year == DeviceTimezoneService.now().year;
     
-    final isTomorrow = appointment.dateTime.day == DateTime.now().add(const Duration(days: 1)).day &&
-        appointment.dateTime.month == DateTime.now().month &&
-        appointment.dateTime.year == DateTime.now().year;
+    final isTomorrow = appointment.dateTime.day == DeviceTimezoneService.now().add(const Duration(days: 1)).day &&
+        appointment.dateTime.month == DeviceTimezoneService.now().month &&
+        appointment.dateTime.year == DeviceTimezoneService.now().year;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

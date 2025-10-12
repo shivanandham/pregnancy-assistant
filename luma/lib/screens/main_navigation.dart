@@ -6,6 +6,7 @@ import 'tracker_screen.dart';
 import 'chatbot_screen.dart';
 import 'calendar_screen.dart';
 import 'user_profile_screen.dart';
+import 'timeline_screen.dart';
 import 'debug_screen.dart';
 import '../theme/app_theme.dart';
 import '../providers/pregnancy_provider.dart';
@@ -30,6 +31,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const TrackerScreen(),
     const ChatbotScreen(),
     const CalendarScreen(),
+    const TimelineScreen(),
     const UserProfileScreen(),
     if (kDebugMode) const DebugScreen(), // Only show in debug mode
   ];
@@ -143,6 +145,11 @@ class _MainNavigationState extends State<MainNavigation> {
               icon: Icon(Icons.calendar_today_outlined),
               activeIcon: Icon(Icons.calendar_today),
               label: 'Calendar',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.timeline_outlined),
+              activeIcon: Icon(Icons.timeline),
+              label: 'Timeline',
             ),
             const BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
