@@ -70,11 +70,7 @@ class UpdateService {
       debugPrint('🔍 Update check - Latest version: $latestVersion');
 
       // Compare versions
-      // TEMPORARY: Force update check for final testing
-      final fakeCurrentVersion = '1.0.0'; // Force older version for testing
-      final isUpdateAvailable = _isVersionNewer(latestVersion, fakeCurrentVersion);
-      debugPrint('🔍 Update check - Current version: $fakeCurrentVersion (FAKE FOR FINAL TESTING)');
-      debugPrint('🔍 Update check - Latest version: $latestVersion');
+      final isUpdateAvailable = _isVersionNewer(latestVersion, currentVersion);
       debugPrint('🔍 Update check - Update available: $isUpdateAvailable');
 
       // Get download URL for APK
