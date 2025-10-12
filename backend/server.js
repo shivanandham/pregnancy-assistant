@@ -22,6 +22,9 @@ const chatSessionRoutes = require('./routes/chatSessions');
 const knowledgeRoutes = require('./routes/knowledge');
 const userProfileRoutes = require('./routes/userProfile');
 
+// Import services
+const CronService = require('./services/cronService');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -89,6 +92,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/chat-sessions', chatSessionRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/user-profile', userProfileRoutes);
+app.use('/api/home', require('./routes/home'));
 
 // Legacy chat endpoint for backward compatibility
 app.post('/chat', async (req, res) => {
@@ -168,6 +172,9 @@ async function startServer() {
       console.log(`💬 Chat API: http://localhost:${PORT}/api/chat`);
       console.log(`📱 API Base: http://localhost:${PORT}/api`);
       console.log(`🗄️ Database: ${process.env.NODE_ENV === 'development' ? 'Local PostgreSQL' : 'Supabase PostgreSQL'}`);
+      
+      // Start cron jobs
+      CronService.start();
     });
 
   } catch (error) {

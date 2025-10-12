@@ -39,9 +39,9 @@ class Pregnancy {
 
   // Get progress percentage
   double get progressPercentage {
-    final totalDays = dueDate.difference(lastMenstrualPeriod).inDays;
-    final elapsedDays = DeviceTimezoneService.now().difference(lastMenstrualPeriod).inDays;
-    return (elapsedDays / totalDays).clamp(0.0, 1.0);
+    // Standard pregnancy is 40 weeks
+    final totalWeeks = 40.0;
+    return (currentWeek / totalWeeks).clamp(0.0, 1.0);
   }
 
   Map<String, dynamic> toJson() {

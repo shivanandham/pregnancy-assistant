@@ -15,6 +15,7 @@ import '../providers/tracker_provider.dart';
 import '../providers/chat_provider.dart';
 import '../providers/chat_session_provider.dart';
 import '../providers/user_profile_provider.dart';
+import '../providers/home_provider.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -74,6 +75,10 @@ class _MainNavigationState extends State<MainNavigation> {
     
     // Load pregnancy data
     await context.read<PregnancyProvider>().loadPregnancyData();
+    if (!mounted) return;
+    
+    // Load home data
+    await context.read<HomeProvider>().loadHomeData();
     if (!mounted) return;
     
     // Load tracker data

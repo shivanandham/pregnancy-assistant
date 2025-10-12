@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,135 +8,160 @@ datasource db {
 }
 
 model UserProfile {
-  id                    String    @id @default(uuid())
-  height                Float?
-  weight                Float?
-  prePregnancyWeight    Float?    @map("pre_pregnancy_weight")
-  age                   Int?
-  gender                String    @default("female")
-  locality              String?
-  timezone              String?
-  medicalHistory        Json?     @map("medical_history")
-  allergies             Json?
-  medications           Json?
-  lifestyle             Json?
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
+  id                 String   @id @default(uuid())
+  height             Float?
+  weight             Float?
+  prePregnancyWeight Float?   @map("pre_pregnancy_weight")
+  age                Int?
+  gender             String   @default("female")
+  locality           String?
+  timezone           String?
+  medicalHistory     Json?    @map("medical_history")
+  allergies          Json?
+  medications        Json?
+  lifestyle          Json?
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("user_profiles")
 }
 
 model ChatSession {
-  id            String   @id @default(uuid())
-  title         String   @default("New Chat")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  messageCount  Int      @default(0) @map("message_count")
-  isActive      Boolean  @default(false) @map("is_active")
-  
-  messages      ChatMessage[]
+  id           String        @id @default(uuid())
+  title        String        @default("New Chat")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  messageCount Int           @default(0) @map("message_count")
+  isActive     Boolean       @default(false) @map("is_active")
+  messages     ChatMessage[]
 
   @@map("chat_sessions")
 }
 
 model PregnancyData {
-  id                    String    @id @default(uuid())
-  dueDate               DateTime  @map("due_date")
-  lastMenstrualPeriod   DateTime  @map("last_menstrual_period")
-  notes                 String?
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
+  id                  String   @id @default(uuid())
+  dueDate             DateTime @map("due_date")
+  lastMenstrualPeriod DateTime @map("last_menstrual_period")
+  notes               String?
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   @@map("pregnancy_data")
 }
 
 model Symptom {
-  id          String    @id @default(uuid())
-  type        String
-  severity    String
-  dateTime    DateTime  @map("date_time")
-  notes       String?
-  customType  String?   @map("custom_type")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id         String   @id @default(uuid())
+  type       String
+  severity   String
+  dateTime   DateTime @map("date_time")
+  notes      String?
+  customType String?  @map("custom_type")
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  @@map("symptoms")
   @@index([dateTime])
+  @@map("symptoms")
 }
 
 model Appointment {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String
   type        String
-  dateTime    DateTime  @map("date_time")
+  dateTime    DateTime @map("date_time")
   location    String?
   doctor      String?
   notes       String?
-  isCompleted Boolean   @default(false) @map("is_completed")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  isCompleted Boolean  @default(false) @map("is_completed")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  @@map("appointments")
   @@index([dateTime])
+  @@map("appointments")
 }
 
 model WeightEntry {
-  id          String    @id @default(uuid())
-  weight      Float
-  dateTime    DateTime  @default(now()) @map("date_time")
-  notes       String?
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  weight    Float
+  dateTime  DateTime @default(now()) @map("date_time")
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
 
-  @@map("weight_entries")
   @@index([dateTime])
+  @@map("weight_entries")
 }
 
 model ChatMessage {
-  id                    String    @id @default(uuid())
-  content               String
-  type                  String
-  timestamp             DateTime  @default(now())
-  context               String?
-  isError               Boolean   @default(false) @map("is_error")
-  isDiagnostic          Boolean   @default(false) @map("is_diagnostic")
-  diagnosticQuestions   Json?     @map("diagnostic_questions")
-  diagnosticAnswers     Json?     @map("diagnostic_answers")
-  parentMessageId       String?   @map("parent_message_id")
-  sessionId             String?   @map("session_id")
-  createdAt             DateTime  @default(now()) @map("created_at")
+  id                  String        @id @default(uuid())
+  content             String
+  type                String
+  timestamp           DateTime      @default(now())
+  context             String?
+  isError             Boolean       @default(false) @map("is_error")
+  isDiagnostic        Boolean       @default(false) @map("is_diagnostic")
+  diagnosticQuestions Json?         @map("diagnostic_questions")
+  diagnosticAnswers   Json?         @map("diagnostic_answers")
+  parentMessageId     String?       @map("parent_message_id")
+  sessionId           String?       @map("session_id")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  parentMessage       ChatMessage?  @relation("DiagnosticQuestions", fields: [parentMessageId], references: [id])
+  diagnosticMessages  ChatMessage[] @relation("DiagnosticQuestions")
+  session             ChatSession?  @relation(fields: [sessionId], references: [id])
 
-  // Relationships
-  session               ChatSession? @relation(fields: [sessionId], references: [id])
-  parentMessage         ChatMessage? @relation("DiagnosticQuestions", fields: [parentMessageId], references: [id])
-  diagnosticMessages    ChatMessage[] @relation("DiagnosticQuestions")
-
-  @@map("chat_messages")
   @@index([timestamp])
   @@index([sessionId])
+  @@map("chat_messages")
 }
 
 model KnowledgeFact {
-  id              String    @id @default(uuid())
+  id              String   @id @default(uuid())
   category        String
-  factText        String    @map("fact_text")
-  sourceMessageId String?   @map("source_message_id")
-  weekNumber      Int?      @map("week_number")
-  dateRecorded    DateTime  @default(now()) @map("date_recorded")
+  factText        String   @map("fact_text")
+  sourceMessageId String?  @map("source_message_id")
+  weekNumber      Int?     @map("week_number")
+  dateRecorded    DateTime @default(now()) @map("date_recorded")
   metadata        Json?
-  createdAt       DateTime  @default(now()) @map("created_at")
+  createdAt       DateTime @default(now()) @map("created_at")
 
-  @@map("knowledge_facts")
   @@index([category])
   @@index([weekNumber])
+  @@map("knowledge_facts")
 }
 
 model ConversationChunk {
-  id          String    @id @default(uuid())
-  content     String
-  weekNumber  Int?      @map("week_number")
-  timestamp   DateTime  @default(now())
-  keywords    String?
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id         String   @id @default(uuid())
+  content    String
+  weekNumber Int?     @map("week_number")
+  timestamp  DateTime @default(now())
+  keywords   String?
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  @@map("conversation_chunks")
   @@index([weekNumber])
+  @@map("conversation_chunks")
 }
+
+model PregnancyTip {
+  id        String   @id @default(uuid())
+  week      Int
+  tip       String
+  category  String
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+
+  @@index([week])
+  @@index([expiresAt])
+  @@map("pregnancy_tips")
+}
+
+model ChecklistCompletion {
+  id              String    @id @default(uuid())
+  checklistItemId String    @map("checklist_item_id")
+  completedAt     DateTime  @map("completed_at")
+  date            DateTime
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([checklistItemId, date], name: "checklistItemId_date")
+  @@map("checklist_completions")
+  @@index([date])
+  @@index([checklistItemId])
+}
+

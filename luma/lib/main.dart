@@ -5,6 +5,7 @@ import 'providers/tracker_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/chat_session_provider.dart';
 import 'providers/user_profile_provider.dart';
+import 'providers/home_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/main_navigation.dart';
 import 'services/device_timezone_service.dart';
@@ -30,6 +31,7 @@ class LumaApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => ChatSessionProvider()),
         ChangeNotifierProvider(create: (_) => UserProfileProvider()),
+        ChangeNotifierProvider(create: (_) => HomeProvider()),
       ],
       child: MaterialApp(
         title: 'Luma - Pregnancy Assistant',

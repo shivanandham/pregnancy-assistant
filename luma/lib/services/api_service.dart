@@ -8,6 +8,10 @@ import '../models/symptom.dart';
 import '../models/appointment.dart';
 import '../models/weight_entry.dart';
 import '../models/user_profile.dart';
+import '../models/home_data.dart';
+import '../models/pregnancy_tip.dart';
+import '../models/pregnancy_milestone.dart';
+import '../models/daily_checklist.dart';
 
 class ApiService {
   static String get baseUrl => ApiConfig.baseUrl;
@@ -623,4 +627,165 @@ class ApiService {
       return false;
     }
   }
+
+  // Home screen data
+  static Future<HomeData?> getHomeData() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/home'),
+        headers: ApiConfig.headers,
+      ).timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return HomeData.fromJson(data['data']);
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error getting home data: $e');
+      return null;
+    }
+  }
+
+  // Get tips for a specific week
+  static Future<List<PregnancyTip>> getTipsForWeek(int week) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/home/tips/$week'),
+        headers: ApiConfig.headers,
+      ).timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return (data['data'] as List<dynamic>)
+              .map((tip) => PregnancyTip.fromJson(tip))
+              .toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error getting tips for week: $e');
+      return [];
+    }
+  }
+
+  // Get milestones for a specific week
+  static Future<Map<String, List<PregnancyMilestone>>> getMilestonesForWeek(int week) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/home/milestones/$week'),
+        headers: ApiConfig.headers,
+      ).timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final milestonesData = data['data'];
+          return {
+            'current': (milestonesData['current'] as List<dynamic>)
+                .map((milestone) => PregnancyMilestone.fromJson(milestone))
+                .toList(),
+            'upcoming': (milestonesData['upcoming'] as List<dynamic>)
+                .map((milestone) => PregnancyMilestone.fromJson(milestone))
+                .toList(),
+            'recent': (milestonesData['recent'] as List<dynamic>)
+                .map((milestone) => PregnancyMilestone.fromJson(milestone))
+                .toList(),
+          };
+        }
+      }
+      return {'current': [], 'upcoming': [], 'recent': []};
+    } catch (e) {
+      print('Error getting milestones for week: $e');
+      return {'current': [], 'upcoming': [], 'recent': []};
+    }
+  }
+
+  // Get daily checklist for a specific week
+  static Future<Map<String, dynamic>> getChecklistForWeek(int week) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/home/checklist/$week'),
+        headers: ApiConfig.headers,
+      ).timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final checklistData = data['data'];
+          return {
+            'tasks': (checklistData['tasks'] as List<dynamic>)
+                .map((task) => DailyChecklist.fromJson(task))
+                .toList(),
+            'byCategory': _parseChecklistByCategory(checklistData['byCategory']),
+          };
+        }
+      }
+      return {'tasks': <DailyChecklist>[], 'byCategory': <String, List<DailyChecklist>>{}};
+    } catch (e) {
+      print('Error getting checklist for week: $e');
+      return {'tasks': <DailyChecklist>[], 'byCategory': <String, List<DailyChecklist>>{}};
+    }
+  }
+
+  static Map<String, List<DailyChecklist>> _parseChecklistByCategory(dynamic data) {
+    if (data == null) return {};
+    
+    Map<String, List<DailyChecklist>> result = {};
+    (data as Map<String, dynamic>).forEach((category, tasks) {
+      result[category] = (tasks as List<dynamic>)
+          .map((task) => DailyChecklist.fromJson(task))
+          .toList();
+    });
+    
+    return result;
+  }
+
+  // Checklist completion methods
+  static Future<bool> toggleChecklistCompletion(String checklistItemId, {DateTime? date}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/home/checklist/$checklistItemId/toggle'),
+        headers: _headers,
+        body: jsonEncode({
+          'date': date?.toIso8601String() ?? DateTime.now().toIso8601String(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error toggling checklist completion: $e');
+      return false;
+    }
+  }
+
+  static Future<List<String>> getChecklistCompletions(DateTime date) async {
+    try {
+      final dateString = date.toIso8601String().split('T')[0]; // YYYY-MM-DD format
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/home/checklist/completions/$dateString'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final completions = data['data']['completions'] as List;
+          return completions.map((completion) => completion['checklistItemId'] as String).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error getting checklist completions: $e');
+      return [];
+    }
+  }
+
 }
