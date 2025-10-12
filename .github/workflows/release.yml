@@ -38,6 +38,8 @@ jobs:
       run: |
         cd luma
         flutter build apk --release
+        # Rename APK to luma.apk
+        mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/luma.apk
         
     - name: Generate Release Notes
       id: release_notes
@@ -105,7 +107,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          luma/build/app/outputs/flutter-apk/app-release.apk
+          luma/build/app/outputs/flutter-apk/luma.apk
         body_path: release_notes.md
         draft: false
         prerelease: false
