@@ -21,6 +21,7 @@ const chatRoutes = require('./routes/chat');
 const chatSessionRoutes = require('./routes/chatSessions');
 const knowledgeRoutes = require('./routes/knowledge');
 const userProfileRoutes = require('./routes/userProfile');
+const releaseRoutes = require('./routes/releases');
 
 // Import services
 const CronService = require('./services/cronService');
@@ -69,6 +70,9 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Rate limiting
 app.use('/api', apiLimiter);
 app.use('/api/chat', chatLimiter);
@@ -107,6 +111,7 @@ app.use('/api/chat-sessions', chatSessionRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/home', require('./routes/home'));
+app.use('/api/releases', releaseRoutes);
 
 // Legacy chat endpoint for backward compatibility
 app.post('/chat', async (req, res) => {

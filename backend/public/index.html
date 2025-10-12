@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luma Pregnancy Assistant - Download</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤱</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        h1 {
+            color: #2D3748;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .qr-container {
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 2px dashed #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .qr-code {
+            max-width: 250px;
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .release-info {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .release-info h3 {
+            color: #2D3748;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-label {
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #2D3748;
+            font-weight: 600;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 20px 0;
+            transition: transform 0.2s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            background: #edf2f7;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #2D3748;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .instructions ol {
+            color: #4a5568;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .refresh-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .refresh-btn:hover {
+            background: #cbd5e0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .qr-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background circle with gradient -->
+                <defs>
+                    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFB6C1;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#FFC0CB;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FF69B4;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#FF1493;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                
+                <!-- Background circle -->
+                <circle cx="256" cy="256" r="240" fill="url(#bgGradient)" stroke="#FFB6C1" stroke-width="8"/>
+                
+                <!-- Main heart shape -->
+                <path d="M256,400 C256,400 200,350 200,280 C200,250 220,230 250,230 C260,230 270,235 276,245 C282,235 292,230 302,230 C332,230 352,250 352,280 C352,350 296,400 256,400 Z" fill="url(#heartGradient)"/>
+                
+                <!-- Small heart inside (baby) -->
+                <path d="M256,320 C256,320 240,310 240,290 C240,280 245,275 250,275 C252,275 254,276 255,278 C256,276 258,275 260,275 C265,275 270,280 270,290 C270,310 254,320 256,320 Z" fill="#FFFFFF" opacity="0.8"/>
+                
+                <!-- Sparkle effects -->
+                <circle cx="180" cy="180" r="4" fill="#FFFFFF" opacity="0.9"/>
+                <circle cx="340" cy="160" r="3" fill="#FFFFFF" opacity="0.7"/>
+                <circle cx="160" cy="320" r="3" fill="#FFFFFF" opacity="0.8"/>
+                <circle cx="360" cy="340" r="4" fill="#FFFFFF" opacity="0.6"/>
+                <circle cx="200" cy="120" r="2" fill="#FFFFFF" opacity="0.8"/>
+                <circle cx="320" cy="380" r="2" fill="#FFFFFF" opacity="0.7"/>
+            </svg>
+        </div>
+        <h1>Luma Pregnancy Assistant</h1>
+        <p class="subtitle">Download the latest version for Android</p>
+        
+        <div class="qr-container">
+            <div id="qr-loading" class="loading"></div>
+            <img id="qr-code" class="qr-code" style="display: none;" alt="QR Code for APK Download">
+        </div>
+
+        <div id="release-info" class="release-info" style="display: none;">
+            <h3>Release Information</h3>
+            <div class="info-item">
+                <span class="info-label">Version:</span>
+                <span class="info-value" id="version">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Released:</span>
+                <span class="info-value" id="published-at">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Downloads:</span>
+                <span class="info-value" id="download-count">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Size:</span>
+                <span class="info-value" id="file-size">-</span>
+            </div>
+        </div>
+
+        <a id="download-btn" class="download-btn" style="display: none;" target="_blank">
+            Download APK
+        </a>
+
+        <div class="instructions">
+            <h3>Installation Instructions</h3>
+            <ol>
+                <li>Scan the QR code with your Android device</li>
+                <li>Or click the download button above</li>
+                <li>Allow installation from unknown sources in your device settings</li>
+                <li>Tap the downloaded APK file to install</li>
+                <li>Follow the on-screen instructions</li>
+            </ol>
+        </div>
+
+        <div id="error-message" class="error" style="display: none;">
+            <p id="error-text"></p>
+            <button class="refresh-btn" onclick="loadQRCode()">Try Again</button>
+        </div>
+    </div>
+
+    <script src="/script.js"></script>
+</body>
+</html>
