@@ -94,11 +94,11 @@ class AppointmentController {
         notes
       });
 
-      await appointment.save();
+      const savedAppointment = await appointment.save();
       
       res.status(201).json({
         success: true,
-        data: appointment.toJSON(),
+        data: savedAppointment.toJSON(),
         message: 'Appointment created successfully'
       });
     } catch (error) {
@@ -149,11 +149,11 @@ class AppointmentController {
         updatedAt: new Date().toISOString()
       });
 
-      await appointment.save();
+      const savedAppointment = await appointment.save();
       
       res.json({
         success: true,
-        data: appointment.toJSON(),
+        data: savedAppointment.toJSON(),
         message: 'Appointment updated successfully'
       });
     } catch (error) {

@@ -109,11 +109,11 @@ class WeightController {
         notes
       });
 
-      await weightEntry.save();
+      const savedWeightEntry = await weightEntry.save();
       
       res.status(201).json({
         success: true,
-        data: weightEntry.toJSON(),
+        data: savedWeightEntry.toJSON(),
         message: 'Weight entry created successfully'
       });
     } catch (error) {

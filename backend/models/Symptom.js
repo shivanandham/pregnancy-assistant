@@ -2,7 +2,7 @@ const prisma = require('../lib/prisma');
 
 class Symptom {
   constructor(data) {
-    this.id = data.id;
+    this.id = data.id; // Prisma will provide the id when creating/updating
     this.type = data.type;
     this.severity = data.severity;
     this.dateTime = data.dateTime;
@@ -22,7 +22,7 @@ class Symptom {
     const data = {
       type: this.type,
       severity: this.severity,
-      dateTime: this.dateTime,
+      dateTime: new Date(this.dateTime), // Convert to Date object for Prisma
       notes: this.notes,
       customType: this.customType,
     };

@@ -80,11 +80,11 @@ class PregnancyController {
         });
       }
 
-      await pregnancy.save();
+      const savedPregnancy = await pregnancy.save();
       
       res.json({
         success: true,
-        data: pregnancy.toJSON(),
+        data: savedPregnancy.toJSON(),
         message: existingPregnancy ? 'Pregnancy data updated' : 'Pregnancy data created'
       });
     } catch (error) {

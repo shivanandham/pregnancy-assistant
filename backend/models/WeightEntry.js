@@ -2,7 +2,7 @@ const prisma = require('../lib/prisma');
 
 class WeightEntry {
   constructor(data) {
-    this.id = data.id;
+    this.id = data.id; // Prisma will provide the id when creating/updating
     this.weight = data.weight;
     this.dateTime = data.dateTime;
     this.notes = data.notes;
@@ -17,7 +17,7 @@ class WeightEntry {
   async save() {
     const data = {
       weight: this.weight,
-      dateTime: this.dateTime,
+      dateTime: new Date(this.dateTime), // Convert to Date object for Prisma
       notes: this.notes,
     };
 

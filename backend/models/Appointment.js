@@ -2,7 +2,7 @@ const prisma = require('../lib/prisma');
 
 class Appointment {
   constructor(data) {
-    this.id = data.id;
+    this.id = data.id; // Prisma will provide the id when creating/updating
     this.title = data.title;
     this.type = data.type;
     this.dateTime = data.dateTime;
@@ -34,7 +34,7 @@ class Appointment {
     const data = {
       title: this.title,
       type: this.type,
-      dateTime: this.dateTime,
+      dateTime: new Date(this.dateTime), // Convert to Date object for Prisma
       location: this.location,
       doctor: this.doctor,
       notes: this.notes,

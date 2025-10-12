@@ -102,11 +102,11 @@ class SymptomController {
         customType
       });
 
-      await symptom.save();
+      const savedSymptom = await symptom.save();
       
       res.status(201).json({
         success: true,
-        data: symptom.toJSON(),
+        data: savedSymptom.toJSON(),
         message: 'Symptom created successfully'
       });
     } catch (error) {

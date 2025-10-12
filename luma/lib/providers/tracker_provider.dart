@@ -115,6 +115,8 @@ class TrackerProvider with ChangeNotifier {
       final addedSymptom = await ApiService.addSymptom(symptom);
       if (addedSymptom != null) {
         _symptoms.add(addedSymptom);
+        // Sort symptoms by dateTime descending (newest first)
+        _symptoms.sort((a, b) => b.dateTime.compareTo(a.dateTime));
         notifyListeners();
         return true;
       } else {
@@ -174,6 +176,8 @@ class TrackerProvider with ChangeNotifier {
       final addedAppointment = await ApiService.addAppointment(appointment);
       if (addedAppointment != null) {
         _appointments.add(addedAppointment);
+        // Sort appointments by dateTime ascending (earliest first)
+        _appointments.sort((a, b) => a.dateTime.compareTo(b.dateTime));
         notifyListeners();
         return true;
       } else {
@@ -257,6 +261,8 @@ class TrackerProvider with ChangeNotifier {
       final addedEntry = await ApiService.addWeightEntry(weightEntry);
       if (addedEntry != null) {
         _weightEntries.add(addedEntry);
+        // Sort weight entries by dateTime descending (newest first)
+        _weightEntries.sort((a, b) => b.dateTime.compareTo(a.dateTime));
         notifyListeners();
         return true;
       } else {
