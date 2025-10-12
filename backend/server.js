@@ -46,7 +46,7 @@ app.use(securityMiddleware);
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-app-domain.com'] // Replace with your app's domain
+    ? true // Allow all origins in production (you can restrict this later)
     : ['http://localhost:3000', 'http://localhost:8080'], // Development origins
   credentials: true
 }));

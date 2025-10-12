@@ -12,8 +12,11 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:reset": "prisma migrate reset --force",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "deploy:db": "node scripts/deploy-database.js",
+    "test:db": "node scripts/test-connection.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.2.1",

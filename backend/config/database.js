@@ -23,7 +23,8 @@ class DatabaseConfig {
       }
 
       const projectRef = this.extractProjectRef(supabaseUrl);
-      return `postgresql://postgres:${supabaseDbPassword}@db.${projectRef}.supabase.co:5432/postgres`;
+      // Use session pooler for IPv4 compatibility
+      return `postgresql://postgres.${projectRef}:${supabaseDbPassword}@aws-1-us-east-2.pooler.supabase.com:5432/postgres`;
     }
   }
 

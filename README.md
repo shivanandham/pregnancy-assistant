@@ -38,9 +38,9 @@ A comprehensive Flutter-based pregnancy tracking and AI assistant app designed t
 ## Architecture
 
 - **Frontend**: Flutter (Android-focused, cross-platform ready)
-- **Backend**: Node.js/Express API proxy for Perplexity API
-- **Database**: Firebase Firestore for data persistence
-- **AI**: Perplexity API via secure backend proxy
+- **Backend**: Node.js/Express API with Prisma ORM
+- **Database**: Supabase PostgreSQL (Production) / Local PostgreSQL (Development)
+- **AI**: Google Gemini API via secure backend proxy
 - **State Management**: Provider pattern
 - **Notifications**: Flutter Local Notifications
 
@@ -50,57 +50,59 @@ A comprehensive Flutter-based pregnancy tracking and AI assistant app designed t
 
 1. **Flutter SDK** (3.9.2 or higher)
 2. **Node.js** (16 or higher)
-3. **Firebase Account**
-4. **Perplexity API Key**
+3. **Supabase Account** (for production database)
+4. **Google Gemini API Key**
+
+### Database Setup (Supabase)
+
+1. **Create Supabase Project**:
+   - Go to [supabase.com](https://supabase.com)
+   - Create new project with a strong database password
+   - Save your credentials
+
+2. **Configure Environment Variables**:
+   ```bash
+   cd backend
+   cp env.example .env
+   ```
+   
+   Add your Supabase credentials to `.env`:
+   ```bash
+   SUPABASE_URL=https://your-project-ref.supabase.co
+   SUPABASE_ANON_KEY=your_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   SUPABASE_DB_PASSWORD=your_database_password
+   GEMINI_API_KEY=your_gemini_api_key
+   NODE_ENV=production
+   ```
+
+3. **Deploy Database** (One Command):
+   ```bash
+   npm run deploy:db
+   ```
+
+   This automatically:
+   - ✅ Validates environment variables
+   - ✅ Sets up database connection
+   - ✅ Creates all tables
+   - ✅ Tests connection
 
 ### Backend Setup
 
-1. Navigate to the backend directory:
-```bash
-cd backend
-```
-
-2. Install dependencies:
+1. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Create environment file:
-```bash
-cp .env.example .env
-```
-
-4. Add your Perplexity API key to `.env`:
-```
-PERPLEXITY_API_KEY=your_actual_api_key_here
-```
-
-5. Run locally:
+2. Run locally (development):
 ```bash
 npm run dev
 ```
 
-6. Deploy to a cloud service (Railway, Render, or Vercel):
-   - Follow the deployment instructions in `backend/README.md`
-   - Update the `baseUrl` in `luma/lib/services/api_service.dart` with your deployed URL
-
-### Firebase Setup
-
-1. Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
-
-2. Enable Firestore Database:
-   - Go to Firestore Database
-   - Create database in production mode
-   - Set up security rules (for single-user app, you can use basic rules)
-
-3. Get Firebase configuration:
-   - Go to Project Settings > General
-   - Add Android app with package name: `com.luma`
-   - Download `google-services.json` and place it in `luma/android/app/`
-
-4. Update Firebase configuration:
-   - Run `flutterfire configure` in the luma directory
-   - Or manually update `luma/lib/firebase_options.dart` with your project details
+3. Deploy to Railway:
+   - Follow instructions in `RAILWAY_DEPLOYMENT.md`
+   - Set environment variables in Railway dashboard
+   - Deploy from GitHub
 
 ### Flutter App Setup
 
@@ -115,12 +117,34 @@ flutter pub get
 ```
 
 3. Update API service URL:
-   - Edit `lib/services/api_service.dart`
+   - Edit `lib/config/api_config.dart`
    - Replace `baseUrl` with your deployed backend URL
 
 4. Run the app:
 ```bash
 flutter run
+```
+
+## 🚀 Quick Commands
+
+### Database Deployment
+```bash
+cd backend
+npm run deploy:db    # Full database deployment
+npm run test:db      # Test database connection
+```
+
+### Development
+```bash
+cd backend
+npm run dev          # Start development server
+npm run db:studio    # Open Prisma Studio
+```
+
+### Production
+```bash
+cd backend
+npm start            # Start production server
 ```
 
 ## Building for Production
