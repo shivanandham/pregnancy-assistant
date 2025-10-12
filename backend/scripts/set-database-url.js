@@ -4,6 +4,9 @@ const path = require('path');
 
 function setDatabaseUrl() {
   try {
+    console.log('🔍 DEBUG: setDatabaseUrl() function called');
+    console.log('🔍 DEBUG: NODE_ENV in setDatabaseUrl =', process.env.NODE_ENV);
+    
     const databaseUrl = DatabaseConfig.getDatabaseUrl();
     const envInfo = DatabaseConfig.getEnvironmentInfo();
     

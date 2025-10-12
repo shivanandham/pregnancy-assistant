@@ -35,13 +35,20 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 // Set the correct DATABASE_URL based on environment
+console.log('🔍 DEBUG: NODE_ENV =', process.env.NODE_ENV);
+console.log('🔍 DEBUG: About to set DATABASE_URL...');
+
 if (process.env.NODE_ENV === 'production') {
+  console.log('🔍 DEBUG: Using production mode - setting DATABASE_URL directly');
   // In production, set DATABASE_URL directly from environment variables
   const DatabaseConfig = require('./config/database');
   process.env.DATABASE_URL = DatabaseConfig.getDatabaseUrl();
+  console.log('🔍 DEBUG: DATABASE_URL set successfully in production mode');
 } else {
+  console.log('🔍 DEBUG: Using development mode - calling setDatabaseUrl()');
   // In development, use the set-database-url script
   setDatabaseUrl();
+  console.log('🔍 DEBUG: setDatabaseUrl() completed in development mode');
 }
 
 // Logging middleware (should be early in the chain)
