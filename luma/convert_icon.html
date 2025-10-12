@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SVG to PNG Converter</title>
+</head>
+<body>
+    <h2>Convert SVG to PNG</h2>
+    <p>Right-click on the image below and "Save image as..." to save as PNG</p>
+    
+    <svg width="1024" height="1024" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" style="border: 1px solid #ccc;">
+      <!-- Background circle with gradient -->
+      <defs>
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FFB6C1;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#FFC0CB;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FF69B4;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#FF1493;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      
+      <!-- Background circle -->
+      <circle cx="256" cy="256" r="240" fill="url(#bgGradient)" stroke="#FFB6C1" stroke-width="8"/>
+      
+      <!-- Main heart shape -->
+      <path d="M256,400 C256,400 200,350 200,280 C200,250 220,230 250,230 C260,230 270,235 276,245 C282,235 292,230 302,230 C332,230 352,250 352,280 C352,350 296,400 256,400 Z" fill="url(#heartGradient)"/>
+      
+      <!-- Small heart inside (baby) -->
+      <path d="M256,320 C256,320 240,310 240,290 C240,280 245,275 250,275 C252,275 254,276 255,278 C256,276 258,275 260,275 C265,275 270,280 270,290 C270,310 254,320 256,320 Z" fill="#FFFFFF" opacity="0.8"/>
+      
+      <!-- Sparkle effects -->
+      <circle cx="180" cy="180" r="4" fill="#FFFFFF" opacity="0.9"/>
+      <circle cx="340" cy="160" r="3" fill="#FFFFFF" opacity="0.7"/>
+      <circle cx="160" cy="320" r="3" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="360" cy="340" r="4" fill="#FFFFFF" opacity="0.6"/>
+      <circle cx="200" cy="120" r="2" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="320" cy="380" r="2" fill="#FFFFFF" opacity="0.7"/>
+    </svg>
+    
+    <script>
+        // Auto-download functionality
+        function downloadPNG() {
+            const svg = document.querySelector('svg');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 1024;
+            canvas.height = 1024;
+            
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const img = new Image();
+            
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0);
+                const pngData = canvas.toDataURL('image/png');
+                
+                const link = document.createElement('a');
+                link.download = 'app_icon.png';
+                link.href = pngData;
+                link.click();
+            };
+            
+            img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+        }
+        
+        // Add download button
+        const button = document.createElement('button');
+        button.textContent = 'Download PNG';
+        button.onclick = downloadPNG;
+        button.style.marginTop = '20px';
+        button.style.padding = '10px 20px';
+        button.style.fontSize = '16px';
+        document.body.appendChild(button);
+    </script>
+</body>
+</html>
