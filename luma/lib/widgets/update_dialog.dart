@@ -18,6 +18,13 @@ class _UpdateDialogState extends State<UpdateDialog> {
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
   String _statusMessage = '';
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +40,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
         ],
       ),
       content: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,6 +164,17 @@ class _UpdateDialogState extends State<UpdateDialog> {
       _statusMessage = 'Preparing download...';
     });
 
+    // Auto-scroll to show download progress
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+
     try {
       // Request permissions first
       setState(() {
@@ -182,16 +201,25 @@ class _UpdateDialogState extends State<UpdateDialog> {
             _downloadProgress = progress;
             _statusMessage = 'Downloading... ${(progress * 100).toInt()}%';
           });
+          
+          // Smooth scroll to keep progress visible
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+            );
+          }
         },
       );
 
       if (downloadResult.success) {
         setState(() {
-          _statusMessage = 'Download complete! Installation will begin shortly...';
+          _statusMessage = 'Download complete! The installer will open shortly. If you see an "Open with" dialog, just tap "Just once" on any option - the installation will work perfectly!';
         });
         
-        // Close dialog after a short delay
-        Future.delayed(const Duration(seconds: 2), () {
+        // Close dialog after a longer delay to let user read the message
+        Future.delayed(const Duration(seconds: 5), () {
           if (mounted) {
             Navigator.of(context).pop();
           }
@@ -201,6 +229,23 @@ class _UpdateDialogState extends State<UpdateDialog> {
           _statusMessage = 'Download failed: ${downloadResult.error}';
           _isDownloading = false;
         });
+        
+        // Show error dialog
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Download Failed'),
+              content: Text('Error: ${downloadResult.error}'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
       }
     } catch (e) {
       setState(() {

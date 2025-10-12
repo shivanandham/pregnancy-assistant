@@ -73,21 +73,30 @@ class _AppWithUpdateCheckState extends State<AppWithUpdateCheck> {
 
   Future<void> _checkForUpdates() async {
     try {
+      debugPrint('🔄 Starting update check...');
+      
       // Check internet connection first
       final hasInternet = await UpdateService.hasInternetConnection();
       if (!hasInternet) {
-        debugPrint('No internet connection, skipping update check');
+        debugPrint('❌ No internet connection, skipping update check');
         return;
       }
+      debugPrint('✅ Internet connection available');
 
       // Check for updates
+      debugPrint('🔍 Checking for updates...');
       final updateInfo = await UpdateService.checkForUpdates();
       
+      debugPrint('📋 Update info: available=${updateInfo.isUpdateAvailable}, error=${updateInfo.error}');
+      
       if (updateInfo.isUpdateAvailable && mounted) {
+        debugPrint('🎯 Showing update dialog');
         _showUpdateDialog(updateInfo);
+      } else {
+        debugPrint('ℹ️ No update available or dialog not shown');
       }
     } catch (e) {
-      debugPrint('Error checking for updates: $e');
+      debugPrint('❌ Error checking for updates: $e');
     }
   }
 

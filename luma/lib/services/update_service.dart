@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -51,6 +52,8 @@ class UpdateService {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
       final currentBuildNumber = packageInfo.buildNumber;
+      
+      debugPrint('🔍 Update check - Current version: $currentVersion+$currentBuildNumber');
 
       // Get latest release from GitHub
       final latestRelease = await _getLatestRelease();
@@ -63,9 +66,16 @@ class UpdateService {
       if (latestVersion == null) {
         return UpdateInfo.error('Invalid version format in release tag');
       }
+      
+      debugPrint('🔍 Update check - Latest version: $latestVersion');
 
       // Compare versions
-      final isUpdateAvailable = _isVersionNewer(latestVersion, currentVersion);
+      // TEMPORARY: Force update check for final testing
+      final fakeCurrentVersion = '1.0.0'; // Force older version for testing
+      final isUpdateAvailable = _isVersionNewer(latestVersion, fakeCurrentVersion);
+      debugPrint('🔍 Update check - Current version: $fakeCurrentVersion (FAKE FOR FINAL TESTING)');
+      debugPrint('🔍 Update check - Latest version: $latestVersion');
+      debugPrint('🔍 Update check - Update available: $isUpdateAvailable');
 
       // Get download URL for APK
       final downloadUrl = _getDownloadUrl(latestRelease['assets']);

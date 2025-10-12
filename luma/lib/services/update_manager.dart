@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -151,6 +152,7 @@ class UpdateManager {
         filePath: filePath,
       );
     } catch (e) {
+      debugPrint('❌ Download and install failed with exception: $e');
       return DownloadResult(
         success: false,
         error: 'Download failed: $e',
@@ -244,14 +246,19 @@ class UpdateManager {
         );
       }
 
-      // Launch the APK installation
-      final uri = Uri.file(filePath);
+      // Use url_launcher with FileProvider
+      final packageName = 'com.luma.luma';
+      final fileName = file.path.split('/').last;
+      final uri = Uri.parse('content://$packageName.fileprovider/luma_updates/$fileName');
+      
       final launched = await launchUrl(
         uri,
         mode: LaunchMode.externalApplication,
       );
 
       if (launched) {
+        // Give the installer a moment to start, then return success
+        await Future.delayed(const Duration(milliseconds: 1000));
         return DownloadResult(success: true);
       } else {
         return DownloadResult(
