@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'home_screen.dart';
 import 'tracker_screen.dart';
@@ -25,6 +26,7 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
   bool _callbacksSetup = false;
+  List<int> _navigationHistory = [0]; // Track navigation history
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -68,19 +70,22 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   Future<void> _loadInitialData() async {
+    if (!mounted) return;
     
     // Load pregnancy data
     await context.read<PregnancyProvider>().loadPregnancyData();
+    if (!mounted) return;
     
     // Load tracker data
     await context.read<TrackerProvider>().loadAllData();
+    if (!mounted) return;
     
     // Load chat sessions first
     await context.read<ChatSessionProvider>().loadSessions();
+    if (!mounted) return;
     
     // Load user profile
     await context.read<UserProfileProvider>().loadUserProfile();
-    
   }
 
   @override
@@ -91,16 +96,23 @@ class _MainNavigationState extends State<MainNavigation> {
       _callbacksSetup = true;
     }
     
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+    return PopScope(
+      canPop: false, // Prevent default back button behavior
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _handleBackButton();
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -110,6 +122,14 @@ class _MainNavigationState extends State<MainNavigation> {
           currentIndex: _currentIndex,
           onTap: (index) {
             setState(() {
+              // Only add to history if it's different from current index
+              if (index != _currentIndex) {
+                _navigationHistory.add(index);
+                // Keep history limited to prevent memory issues
+                if (_navigationHistory.length > 10) {
+                  _navigationHistory.removeAt(0);
+                }
+              }
               _currentIndex = index;
             });
           },
@@ -165,6 +185,48 @@ class _MainNavigationState extends State<MainNavigation> {
           ],
         ),
       ),
+      ),
     );
   }
+
+  void _handleBackButton() {
+    // If we have navigation history, go back to previous screen
+    if (_navigationHistory.length > 1) {
+      setState(() {
+        _navigationHistory.removeLast(); // Remove current screen
+        _currentIndex = _navigationHistory.last; // Go to previous screen
+      });
+    } else {
+      // If we're on the home screen or no history, show exit confirmation
+      _showExitConfirmation();
+    }
+  }
+
+  void _showExitConfirmation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Exit App'),
+          content: const Text('Are you sure you want to exit the app?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                SystemNavigator.pop(); // Exit the app
+              },
+              child: const Text('Exit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }
