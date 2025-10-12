@@ -1,16 +1,14 @@
-const { v4: uuidv4 } = require('uuid');
-const database = require('../config/database');
-const Logger = require('../middleware/logger');
+const prisma = require('../lib/prisma');
 
 class Symptom {
   constructor(data) {
-    this.id = data.id || uuidv4();
+    this.id = data.id;
     this.type = data.type;
     this.severity = data.severity;
     this.dateTime = data.dateTime;
-    this.notes = data.notes || null;
-    this.customType = data.customType || null;
-    this.createdAt = data.createdAt || new Date().toISOString();
+    this.notes = data.notes;
+    this.customType = data.customType;
+    this.createdAt = data.createdAt;
   }
 
   getDisplayName() {
@@ -21,81 +19,68 @@ class Symptom {
   }
 
   async save() {
-    const sql = `
-      INSERT INTO symptoms 
-      (id, type, severity, date_time, notes, custom_type, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    
-    await database.run(sql, [
-      this.id,
-      this.type,
-      this.severity,
-      this.dateTime,
-      this.notes,
-      this.customType,
-      this.createdAt
-    ]);
-    
-    return this;
+    const data = {
+      type: this.type,
+      severity: this.severity,
+      dateTime: this.dateTime,
+      notes: this.notes,
+      customType: this.customType,
+    };
+
+    if (this.id) {
+      // Update existing symptom
+      const updated = await prisma.symptom.update({
+        where: { id: this.id },
+        data: data,
+      });
+      return new Symptom(updated);
+    } else {
+      // Create new symptom
+      const created = await prisma.symptom.create({
+        data: data,
+      });
+      return new Symptom(created);
+    }
   }
 
   static async getAll() {
-    const sql = 'SELECT * FROM symptoms ORDER BY date_time DESC';
-    const rows = await database.all(sql);
+    const symptoms = await prisma.symptom.findMany({
+      orderBy: { dateTime: 'desc' },
+    });
     
-    return rows.map(row => new Symptom({
-      id: row.id,
-      type: row.type,
-      severity: row.severity,
-      dateTime: row.date_time,
-      notes: row.notes,
-      customType: row.custom_type,
-      createdAt: row.created_at
-    }));
+    return symptoms.map(symptom => new Symptom(symptom));
   }
 
   static async getById(id) {
-    const sql = 'SELECT * FROM symptoms WHERE id = ?';
-    const row = await database.get(sql, [id]);
+    const symptom = await prisma.symptom.findUnique({
+      where: { id },
+    });
     
-    if (row) {
-      return new Symptom({
-        id: row.id,
-        type: row.type,
-        severity: row.severity,
-        dateTime: row.date_time,
-        notes: row.notes,
-        customType: row.custom_type,
-        createdAt: row.created_at
-      });
+    if (symptom) {
+      return new Symptom(symptom);
     }
     
     return null;
   }
 
   static async getByDateRange(startDate, endDate) {
-    const sql = `
-      SELECT * FROM symptoms 
-      WHERE date_time >= ? AND date_time <= ? 
-      ORDER BY date_time DESC
-    `;
-    const rows = await database.all(sql, [startDate, endDate]);
+    const symptoms = await prisma.symptom.findMany({
+      where: {
+        dateTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { dateTime: 'desc' },
+    });
     
-    return rows.map(row => new Symptom({
-      id: row.id,
-      type: row.type,
-      severity: row.severity,
-      dateTime: row.date_time,
-      notes: row.notes,
-      customType: row.custom_type,
-      createdAt: row.created_at
-    }));
+    return symptoms.map(symptom => new Symptom(symptom));
   }
 
   static async delete(id) {
-    const sql = 'DELETE FROM symptoms WHERE id = ?';
-    await database.run(sql, [id]);
+    await prisma.symptom.delete({
+      where: { id },
+    });
   }
 
   toJSON() {

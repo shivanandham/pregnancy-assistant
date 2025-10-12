@@ -74,6 +74,7 @@ class _TrackerScreenState extends State<TrackerScreen> with TickerProviderStateM
       floatingActionButton: Consumer<TrackerProvider>(
         builder: (context, trackerProvider, child) {
           return FloatingActionButton(
+            heroTag: "tracker_add_button",
             onPressed: () => _showAddDialog(trackerProvider),
             backgroundColor: AppTheme.primaryColor,
             child: const Icon(Icons.add, color: Colors.white),

@@ -62,6 +62,7 @@ class PregnancyProvider with ChangeNotifier {
     required DateTime lastMenstrualPeriod,
     String? notes,
   }) async {
+    
     _setLoading(true);
     _clearError();
 
@@ -76,6 +77,7 @@ class PregnancyProvider with ChangeNotifier {
       );
 
       final savedPregnancy = await ApiService.savePregnancyData(pregnancy);
+      
       if (savedPregnancy != null) {
         _pregnancy = savedPregnancy;
         notifyListeners();
@@ -85,6 +87,7 @@ class PregnancyProvider with ChangeNotifier {
         return false;
       }
     } catch (e) {
+      print('❌ PregnancyProvider: Error saving pregnancy data: $e');
       _setError('Failed to save pregnancy data: $e');
       return false;
     } finally {

@@ -3,8 +3,11 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-// Import database and middleware
-const database = require('./config/database');
+// Import Prisma client and database configuration
+const prisma = require('./lib/prisma');
+const setDatabaseUrl = require('./scripts/set-database-url');
+
+// Import middleware
 const { securityMiddleware, apiLimiter, chatLimiter } = require('./middleware/security');
 const { validate, schemas } = require('./middleware/validation');
 const Logger = require('./middleware/logger');
@@ -15,6 +18,7 @@ const symptomRoutes = require('./routes/symptoms');
 const appointmentRoutes = require('./routes/appointments');
 const weightRoutes = require('./routes/weight');
 const chatRoutes = require('./routes/chat');
+const chatSessionRoutes = require('./routes/chatSessions');
 const knowledgeRoutes = require('./routes/knowledge');
 const userProfileRoutes = require('./routes/userProfile');
 
@@ -26,6 +30,9 @@ if (!process.env.GEMINI_API_KEY) {
   console.error('GEMINI_API_KEY is required in environment variables');
   process.exit(1);
 }
+
+// Set the correct DATABASE_URL based on environment
+setDatabaseUrl();
 
 // Logging middleware (should be early in the chain)
 app.use(Logger.logRequest);
@@ -50,13 +57,27 @@ app.use('/api', apiLimiter);
 app.use('/api/chat', chatLimiter);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Luma Pregnancy Assistant Backend is running',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
+app.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    
+    res.json({ 
+      status: 'OK', 
+      message: 'Luma Pregnancy Assistant Backend is running',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      database: 'Connected',
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'ERROR',
+      message: 'Database connection failed',
+      timestamp: new Date().toISOString(),
+      error: error.message
+    });
+  }
 });
 
 // API Routes
@@ -65,6 +86,7 @@ app.use('/api/symptoms', symptomRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/weight', weightRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/chat-sessions', chatSessionRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 
@@ -123,27 +145,33 @@ app.use('*', (req, res) => {
 // Initialize database and start server
 async function startServer() {
   try {
-    // Create data directory if it doesn't exist
-    const fs = require('fs');
-    const dataDir = path.join(__dirname, 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    // Initialize database
-    await database.initialize();
-    console.log('Database initialized successfully');
+    console.log('🔗 Testing database connection...');
+    
+    // Test Prisma connection
+    await prisma.$queryRaw`SELECT NOW() as current_time`;
+    console.log('✅ Database connected successfully');
+    
+    // Get database info
+    const dbInfo = await prisma.$queryRaw`
+      SELECT 
+        current_database() as database_name,
+        version() as version
+    `;
+    
+    console.log(`📊 Database: ${dbInfo[0].database_name}`);
+    console.log(`🐘 PostgreSQL: ${dbInfo[0].version.split(' ')[0]}`);
 
     // Start server
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Luma Pregnancy Assistant Backend running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`💬 Chat API: http://localhost:${PORT}/api/chat`);
       console.log(`📱 API Base: http://localhost:${PORT}/api`);
+      console.log(`🗄️ Database: ${process.env.NODE_ENV === 'development' ? 'Local PostgreSQL' : 'Supabase PostgreSQL'}`);
     });
 
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 }
@@ -152,7 +180,7 @@ async function startServer() {
 process.on('SIGINT', async () => {
   console.log('\n🛑 Shutting down server...');
   try {
-    await database.close();
+    await prisma.$disconnect();
     console.log('✅ Database connection closed');
     process.exit(0);
   } catch (error) {
@@ -164,7 +192,7 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
   console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
   try {
-    await database.close();
+    await prisma.$disconnect();
     process.exit(0);
   } catch (error) {
     console.error('❌ Error during shutdown:', error);

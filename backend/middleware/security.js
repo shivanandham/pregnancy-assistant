@@ -17,7 +17,7 @@ const securityMiddleware = helmet({
 // Rate limiting for API endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // More lenient in development
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.'
@@ -29,7 +29,7 @@ const apiLimiter = rateLimit({
 // Rate limiting for chat endpoint (more restrictive)
 const chatLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 10, // limit each IP to 10 chat requests per minute
+  max: process.env.NODE_ENV === 'development' ? 100 : 10, // More lenient in development
   message: {
     success: false,
     message: 'Too many chat requests, please wait a moment before trying again.'

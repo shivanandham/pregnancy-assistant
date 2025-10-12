@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/pregnancy_provider.dart';
 import 'providers/tracker_provider.dart';
 import 'providers/chat_provider.dart';
+import 'providers/chat_session_provider.dart';
 import 'providers/user_profile_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/main_navigation.dart';
@@ -23,6 +24,7 @@ class LumaApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PregnancyProvider()),
         ChangeNotifierProvider(create: (_) => TrackerProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => ChatSessionProvider()),
         ChangeNotifierProvider(create: (_) => UserProfileProvider()),
       ],
       child: MaterialApp(

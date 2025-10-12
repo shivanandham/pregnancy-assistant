@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const database = require('../config/database');
+const prisma = require('../lib/prisma');
 
 class KnowledgeFact {
   constructor(data) {
@@ -14,33 +14,18 @@ class KnowledgeFact {
   }
 
   async save() {
-    const sql = `
-      INSERT INTO knowledge_facts 
-      (id, category, fact_text, source_message_id, week_number, date_recorded, metadata, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    
-    await database.run(sql, [
-      this.id,
-      this.category,
-      this.factText,
-      this.sourceMessageId,
-      this.weekNumber,
-      this.dateRecorded,
-      this.metadata,
-      this.createdAt
-    ]);
-    
-    // Also insert into FTS table
-    const ftsSql = `
-      INSERT INTO knowledge_facts_fts (fact_text, category)
-      VALUES (?, ?)
-    `;
-    
-    await database.run(ftsSql, [
-      this.factText,
-      this.category
-    ]);
+    await prisma.knowledgeFact.create({
+      data: {
+        id: this.id,
+        category: this.category,
+        factText: this.factText,
+        sourceMessageId: this.sourceMessageId,
+        weekNumber: this.weekNumber,
+        dateRecorded: this.dateRecorded,
+        metadata: this.metadata,
+        createdAt: this.createdAt,
+      },
+    });
     
     return this;
   }
@@ -82,26 +67,27 @@ class KnowledgeFact {
   }
 
   static async search(query, limit = 20) {
-    // For now, use simple LIKE search until we implement proper FTS
-    const sql = `
-      SELECT * FROM knowledge_facts 
-      WHERE fact_text LIKE ? OR category LIKE ?
-      ORDER BY created_at DESC
-      LIMIT ?
-    `;
+    // Use Prisma for search
+    const facts = await prisma.knowledgeFact.findMany({
+      where: {
+        OR: [
+          { factText: { contains: query, mode: 'insensitive' } },
+          { category: { contains: query, mode: 'insensitive' } }
+        ]
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit
+    });
     
-    const searchTerm = `%${query}%`;
-    const rows = await database.all(sql, [searchTerm, searchTerm, limit]);
-    
-    return rows.map(row => new KnowledgeFact({
-      id: row.id,
-      category: row.category,
-      factText: row.fact_text,
-      sourceMessageId: row.source_message_id,
-      weekNumber: row.week_number,
-      dateRecorded: row.date_recorded,
-      metadata: row.metadata ? JSON.parse(row.metadata) : null,
-      createdAt: row.created_at
+    return facts.map(fact => new KnowledgeFact({
+      id: fact.id,
+      category: fact.category,
+      factText: fact.factText,
+      sourceMessageId: fact.sourceMessageId,
+      weekNumber: fact.weekNumber,
+      dateRecorded: fact.dateRecorded,
+      metadata: fact.metadata,
+      createdAt: fact.createdAt
     }));
   }
 

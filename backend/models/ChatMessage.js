@@ -1,105 +1,90 @@
+const prisma = require('../lib/prisma');
 const { v4: uuidv4 } = require('uuid');
-const database = require('../config/database');
 
 class ChatMessage {
   constructor(data) {
     this.id = data.id || uuidv4();
     this.content = data.content;
     this.type = data.type; // 'user' or 'assistant'
-    this.timestamp = data.timestamp || new Date().toISOString();
-    this.context = data.context || null;
+    this.timestamp = data.timestamp || new Date();
+    this.context = data.context;
     this.isError = data.isError || false;
     this.isDiagnostic = data.isDiagnostic || false;
-    this.diagnosticQuestions = data.diagnosticQuestions || null;
-    this.diagnosticAnswers = data.diagnosticAnswers || null;
-    this.parentMessageId = data.parentMessageId || null;
+    this.diagnosticQuestions = data.diagnosticQuestions;
+    this.diagnosticAnswers = data.diagnosticAnswers;
+    this.parentMessageId = data.parentMessageId;
+    this.sessionId = data.sessionId;
+    this.createdAt = data.createdAt || new Date();
   }
 
   async save() {
-    const sql = `
-      INSERT INTO chat_messages 
-      (id, content, type, timestamp, context, is_error, is_diagnostic, diagnostic_questions, diagnostic_answers, parent_message_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    
-    await database.run(sql, [
-      this.id,
-      this.content,
-      this.type,
-      this.timestamp,
-      this.context,
-      this.isError ? 1 : 0,
-      this.isDiagnostic ? 1 : 0,
-      this.diagnosticQuestions ? JSON.stringify(this.diagnosticQuestions) : null,
-      this.diagnosticAnswers ? JSON.stringify(this.diagnosticAnswers) : null,
-      this.parentMessageId
-    ]);
-    
-    return this;
+    const data = {
+      id: this.id,
+      content: this.content,
+      type: this.type,
+      timestamp: this.timestamp,
+      context: this.context,
+      isError: this.isError,
+      isDiagnostic: this.isDiagnostic,
+      diagnosticQuestions: this.diagnosticQuestions,
+      diagnosticAnswers: this.diagnosticAnswers,
+      parentMessageId: this.parentMessageId,
+      sessionId: this.sessionId,
+    };
+
+    // Always create new message (since we auto-generate IDs)
+    const created = await prisma.chatMessage.create({
+      data: data,
+    });
+    return new ChatMessage(created);
   }
 
   static async getAll() {
-    const sql = 'SELECT * FROM chat_messages ORDER BY timestamp ASC';
-    const rows = await database.all(sql);
+    const messages = await prisma.chatMessage.findMany({
+      orderBy: { timestamp: 'asc' },
+    });
     
-    return rows.map(row => new ChatMessage({
-      id: row.id,
-      content: row.content,
-      type: row.type,
-      timestamp: row.timestamp,
-      context: row.context,
-      isError: Boolean(row.is_error),
-      isDiagnostic: Boolean(row.is_diagnostic),
-      diagnosticQuestions: row.diagnostic_questions ? JSON.parse(row.diagnostic_questions) : null,
-      diagnosticAnswers: row.diagnostic_answers ? JSON.parse(row.diagnostic_answers) : null,
-      parentMessageId: row.parent_message_id
-    }));
+    return messages.map(message => new ChatMessage(message));
   }
 
   static async getById(id) {
-    const sql = 'SELECT * FROM chat_messages WHERE id = ?';
-    const row = await database.get(sql, [id]);
+    const message = await prisma.chatMessage.findUnique({
+      where: { id },
+    });
     
-    if (row) {
-      return new ChatMessage({
-        id: row.id,
-        content: row.content,
-        type: row.type,
-        timestamp: row.timestamp,
-        context: row.context,
-        isError: Boolean(row.is_error)
-      });
+    if (message) {
+      return new ChatMessage(message);
     }
     
     return null;
   }
 
   static async getRecent(limit = 50) {
-    const sql = `
-      SELECT * FROM chat_messages 
-      ORDER BY timestamp DESC 
-      LIMIT ?
-    `;
-    const rows = await database.all(sql, [limit]);
+    const messages = await prisma.chatMessage.findMany({
+      orderBy: { timestamp: 'desc' },
+      take: limit,
+    });
     
-    return rows.map(row => new ChatMessage({
-      id: row.id,
-      content: row.content,
-      type: row.type,
-      timestamp: row.timestamp,
-      context: row.context,
-      isError: Boolean(row.is_error)
-    })).reverse(); // Reverse to get chronological order
+    return messages.reverse().map(message => new ChatMessage(message));
+  }
+
+  static async getBySessionId(sessionId) {
+    const messages = await prisma.chatMessage.findMany({
+      where: { sessionId },
+      orderBy: { timestamp: 'asc' },
+    });
+    
+    return messages.map(message => new ChatMessage(message));
   }
 
   static async clearHistory() {
-    const sql = 'DELETE FROM chat_messages';
-    await database.run(sql);
+    await prisma.chatMessage.deleteMany();
   }
 
   static async delete(id) {
-    const sql = 'DELETE FROM chat_messages WHERE id = ?';
-    await database.run(sql, [id]);
+    await prisma.chatMessage.delete({
+      where: { id },
+    });
   }
 
   toJSON() {
@@ -109,7 +94,12 @@ class ChatMessage {
       type: this.type,
       timestamp: this.timestamp,
       context: this.context,
-      isError: this.isError
+      isError: this.isError,
+      isDiagnostic: this.isDiagnostic,
+      diagnosticQuestions: this.diagnosticQuestions,
+      diagnosticAnswers: this.diagnosticAnswers,
+      parentMessageId: this.parentMessageId,
+      createdAt: this.createdAt
     };
   }
 }

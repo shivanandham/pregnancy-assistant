@@ -1,13 +1,12 @@
-const { v4: uuidv4 } = require('uuid');
-const database = require('../config/database');
+const prisma = require('../lib/prisma');
 
 class WeightEntry {
   constructor(data) {
-    this.id = data.id || uuidv4();
+    this.id = data.id;
     this.weight = data.weight;
     this.dateTime = data.dateTime;
-    this.notes = data.notes || null;
-    this.createdAt = data.createdAt || new Date().toISOString();
+    this.notes = data.notes;
+    this.createdAt = data.createdAt;
   }
 
   // Convert kg to lbs
@@ -16,73 +15,66 @@ class WeightEntry {
   }
 
   async save() {
-    const sql = `
-      INSERT INTO weight_entries 
-      (id, weight, date_time, notes, created_at)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    
-    await database.run(sql, [
-      this.id,
-      this.weight,
-      this.dateTime,
-      this.notes,
-      this.createdAt
-    ]);
-    
-    return this;
+    const data = {
+      weight: this.weight,
+      dateTime: this.dateTime,
+      notes: this.notes,
+    };
+
+    if (this.id) {
+      // Update existing weight entry
+      const updated = await prisma.weightEntry.update({
+        where: { id: this.id },
+        data: data,
+      });
+      return new WeightEntry(updated);
+    } else {
+      // Create new weight entry
+      const created = await prisma.weightEntry.create({
+        data: data,
+      });
+      return new WeightEntry(created);
+    }
   }
 
   static async getAll() {
-    const sql = 'SELECT * FROM weight_entries ORDER BY date_time DESC';
-    const rows = await database.all(sql);
+    const weightEntries = await prisma.weightEntry.findMany({
+      orderBy: { dateTime: 'desc' },
+    });
     
-    return rows.map(row => new WeightEntry({
-      id: row.id,
-      weight: row.weight,
-      dateTime: row.date_time,
-      notes: row.notes,
-      createdAt: row.created_at
-    }));
+    return weightEntries.map(entry => new WeightEntry(entry));
   }
 
   static async getById(id) {
-    const sql = 'SELECT * FROM weight_entries WHERE id = ?';
-    const row = await database.get(sql, [id]);
+    const weightEntry = await prisma.weightEntry.findUnique({
+      where: { id },
+    });
     
-    if (row) {
-      return new WeightEntry({
-        id: row.id,
-        weight: row.weight,
-        dateTime: row.date_time,
-        notes: row.notes,
-        createdAt: row.created_at
-      });
+    if (weightEntry) {
+      return new WeightEntry(weightEntry);
     }
     
     return null;
   }
 
   static async getByDateRange(startDate, endDate) {
-    const sql = `
-      SELECT * FROM weight_entries 
-      WHERE date_time >= ? AND date_time <= ? 
-      ORDER BY date_time DESC
-    `;
-    const rows = await database.all(sql, [startDate, endDate]);
+    const weightEntries = await prisma.weightEntry.findMany({
+      where: {
+        dateTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { dateTime: 'desc' },
+    });
     
-    return rows.map(row => new WeightEntry({
-      id: row.id,
-      weight: row.weight,
-      dateTime: row.date_time,
-      notes: row.notes,
-      createdAt: row.created_at
-    }));
+    return weightEntries.map(entry => new WeightEntry(entry));
   }
 
   static async delete(id) {
-    const sql = 'DELETE FROM weight_entries WHERE id = ?';
-    await database.run(sql, [id]);
+    await prisma.weightEntry.delete({
+      where: { id },
+    });
   }
 
   toJSON() {

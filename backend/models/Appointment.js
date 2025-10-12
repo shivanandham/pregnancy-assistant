@@ -1,18 +1,17 @@
-const { v4: uuidv4 } = require('uuid');
-const database = require('../config/database');
+const prisma = require('../lib/prisma');
 
 class Appointment {
   constructor(data) {
-    this.id = data.id || uuidv4();
+    this.id = data.id;
     this.title = data.title;
     this.type = data.type;
     this.dateTime = data.dateTime;
-    this.location = data.location || null;
-    this.doctor = data.doctor || null;
-    this.notes = data.notes || null;
-    this.isCompleted = data.isCompleted || false;
-    this.createdAt = data.createdAt || new Date().toISOString();
-    this.updatedAt = data.updatedAt || new Date().toISOString();
+    this.location = data.location;
+    this.doctor = data.doctor;
+    this.notes = data.notes;
+    this.isCompleted = data.isCompleted;
+    this.createdAt = data.createdAt;
+    this.updatedAt = data.updatedAt;
   }
 
   getDisplayName() {
@@ -32,96 +31,74 @@ class Appointment {
   }
 
   async save() {
-    const sql = `
-      INSERT OR REPLACE INTO appointments 
-      (id, title, type, date_time, location, doctor, notes, is_completed, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    
-    await database.run(sql, [
-      this.id,
-      this.title,
-      this.type,
-      this.dateTime,
-      this.location,
-      this.doctor,
-      this.notes,
-      this.isCompleted ? 1 : 0,
-      this.createdAt,
-      this.updatedAt
-    ]);
-    
-    return this;
+    const data = {
+      title: this.title,
+      type: this.type,
+      dateTime: this.dateTime,
+      location: this.location,
+      doctor: this.doctor,
+      notes: this.notes,
+      isCompleted: this.isCompleted,
+    };
+
+    if (this.id) {
+      // Update existing appointment
+      const updated = await prisma.appointment.update({
+        where: { id: this.id },
+        data: data,
+      });
+      return new Appointment(updated);
+    } else {
+      // Create new appointment
+      const created = await prisma.appointment.create({
+        data: data,
+      });
+      return new Appointment(created);
+    }
   }
 
   static async getAll() {
-    const sql = 'SELECT * FROM appointments ORDER BY date_time ASC';
-    const rows = await database.all(sql);
+    const appointments = await prisma.appointment.findMany({
+      orderBy: { dateTime: 'asc' },
+    });
     
-    return rows.map(row => new Appointment({
-      id: row.id,
-      title: row.title,
-      type: row.type,
-      dateTime: row.date_time,
-      location: row.location,
-      doctor: row.doctor,
-      notes: row.notes,
-      isCompleted: Boolean(row.is_completed),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
-    }));
+    return appointments.map(appointment => new Appointment(appointment));
   }
 
   static async getById(id) {
-    const sql = 'SELECT * FROM appointments WHERE id = ?';
-    const row = await database.get(sql, [id]);
+    const appointment = await prisma.appointment.findUnique({
+      where: { id },
+    });
     
-    if (row) {
-      return new Appointment({
-        id: row.id,
-        title: row.title,
-        type: row.type,
-        dateTime: row.date_time,
-        location: row.location,
-        doctor: row.doctor,
-        notes: row.notes,
-        isCompleted: Boolean(row.is_completed),
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      });
+    if (appointment) {
+      return new Appointment(appointment);
     }
     
     return null;
   }
 
   static async getUpcoming() {
-    const now = new Date().toISOString();
-    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const now = new Date();
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     
-    const sql = `
-      SELECT * FROM appointments 
-      WHERE date_time >= ? AND date_time <= ? AND is_completed = 0
-      ORDER BY date_time ASC
-    `;
-    const rows = await database.all(sql, [now, nextWeek]);
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        dateTime: {
+          gte: now,
+          lte: nextWeek,
+        },
+        isCompleted: false,
+      },
+      orderBy: { dateTime: 'asc' },
+    });
     
-    return rows.map(row => new Appointment({
-      id: row.id,
-      title: row.title,
-      type: row.type,
-      dateTime: row.date_time,
-      location: row.location,
-      doctor: row.doctor,
-      notes: row.notes,
-      isCompleted: Boolean(row.is_completed),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at
-    }));
+    return appointments.map(appointment => new Appointment(appointment));
   }
 
   static async delete(id) {
-    const sql = 'DELETE FROM appointments WHERE id = ?';
-    await database.run(sql, [id]);
+    await prisma.appointment.delete({
+      where: { id },
+    });
   }
 
   toJSON() {

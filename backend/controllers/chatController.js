@@ -17,6 +17,40 @@ class ChatController {
     }
   }
 
+  // Generate a chat title from the first message
+  static generateChatTitle(message) {
+    // Clean and truncate the message
+    let title = message.trim();
+    
+    // Remove common greetings and make it more concise
+    const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
+    const lowerMessage = title.toLowerCase();
+    
+    for (const greeting of greetings) {
+      if (lowerMessage.startsWith(greeting)) {
+        title = title.substring(greeting.length).trim();
+        break;
+      }
+    }
+    
+    // Capitalize first letter
+    if (title.length > 0) {
+      title = title.charAt(0).toUpperCase() + title.slice(1);
+    }
+    
+    // Truncate to reasonable length (max 50 characters)
+    if (title.length > 50) {
+      title = title.substring(0, 47) + '...';
+    }
+    
+    // If title is empty or too short, use a default
+    if (title.length < 3) {
+      title = 'New Chat';
+    }
+    
+    return title;
+  }
+
   // Pregnancy-specific context to enhance AI responses
   static getPregnancyContext(week = null) {
     let context = `
@@ -47,7 +81,7 @@ ${ChatController.loadPregnancyGuide()}
   // Send chat message
   static async sendMessage(req, res) {
     try {
-      const { message, context } = req.body;
+      const { message, context, sessionId } = req.body;
       
       if (!message) {
         return res.status(400).json({
@@ -60,9 +94,23 @@ ${ChatController.loadPregnancyGuide()}
       const userMessage = new ChatMessage({
         content: message,
         type: 'user',
-        context
+        context,
+        sessionId: sessionId
       });
       await userMessage.save();
+
+      // Update message count for the session (user message)
+      const ChatSession = require('../models/ChatSession');
+      await ChatSession.incrementMessageCount(sessionId);
+
+      // Auto-generate title for new sessions (if this is the first message)
+      if (sessionId) {
+        const session = await ChatSession.getById(sessionId);
+        if (session && session.title === 'New Chat') {
+          const generatedTitle = ChatController.generateChatTitle(message);
+          await ChatSession.updateTitle(sessionId, generatedTitle);
+        }
+      }
 
       // Get current pregnancy data for context
       const pregnancy = await Pregnancy.getCurrent();
@@ -137,7 +185,8 @@ ${ChatController.loadPregnancyGuide()}
           context: currentWeek ? `Week ${currentWeek}` : null,
           isDiagnostic: true,
           diagnosticQuestions: diagnosticAnalysis.questions,
-          parentMessageId: userMessage.id
+          parentMessageId: userMessage.id,
+          sessionId: sessionId
         });
         await diagnosticMessage.save();
         
@@ -154,12 +203,16 @@ ${ChatController.loadPregnancyGuide()}
         assistantMessage = new ChatMessage({
           content: aiResponse,
           type: 'assistant',
-          context: currentWeek ? `Week ${currentWeek}` : null
+          context: currentWeek ? `Week ${currentWeek}` : null,
+          sessionId: sessionId
         });
         await assistantMessage.save();
       } else {
         assistantMessage = diagnosticMessage;
       }
+
+      // Update message count for the session (assistant message)
+      await ChatSession.incrementMessageCount(sessionId);
 
       // Extract and store knowledge asynchronously
       const knowledgeExtractor = require('../services/knowledgeExtractor');
@@ -337,7 +390,8 @@ ${ChatController.loadPregnancyGuide()}
         type: 'assistant',
         context: currentWeek ? `Week ${currentWeek}` : null,
         diagnosticAnswers: answers,
-        parentMessageId: messageId
+        parentMessageId: messageId,
+        sessionId: sessionId
       });
       await assistantMessage.save();
 

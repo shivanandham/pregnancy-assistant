@@ -62,12 +62,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
         actions: [
+          // Refresh button
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _refreshProfile(),
+            tooltip: 'Refresh Profile',
+          ),
+          // Edit/Save button
           Consumer<UserProfileProvider>(
             builder: (context, provider, child) {
               if (provider.hasProfile) {
                 return IconButton(
                   icon: Icon(_isEditing ? Icons.save : Icons.edit),
                   onPressed: () => _isEditing ? _saveProfile(provider) : _toggleEdit(),
+                  tooltip: _isEditing ? 'Save Profile' : 'Edit Profile',
                 );
               }
               return const SizedBox.shrink();
@@ -900,6 +908,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     setState(() {
       _isEditing = !_isEditing;
     });
+  }
+
+  void _refreshProfile() async {
+    await context.read<UserProfileProvider>().loadUserProfile();
+    
+    // Show a snackbar to confirm refresh
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile refreshed'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _createProfile(UserProfileProvider provider) async {

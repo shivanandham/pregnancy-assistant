@@ -1,14 +1,13 @@
-const { v4: uuidv4 } = require('uuid');
-const database = require('../config/database');
+const prisma = require('../lib/prisma');
 
 class Pregnancy {
   constructor(data) {
-    this.id = data.id || uuidv4();
-    this.dueDate = data.dueDate;
-    this.lastMenstrualPeriod = data.lastMenstrualPeriod;
-    this.notes = data.notes || null;
-    this.createdAt = data.createdAt || new Date().toISOString();
-    this.updatedAt = data.updatedAt || new Date().toISOString();
+    this.id = data.id;
+    this.dueDate = new Date(data.dueDate);
+    this.lastMenstrualPeriod = new Date(data.lastMenstrualPeriod);
+    this.notes = data.notes;
+    this.createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
+    this.updatedAt = data.updatedAt ? new Date(data.updatedAt) : new Date();
   }
 
   // Calculate current week of pregnancy
@@ -45,45 +44,44 @@ class Pregnancy {
   }
 
   async save() {
-    const sql = `
-      INSERT OR REPLACE INTO pregnancy_data 
-      (id, due_date, last_menstrual_period, notes, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-    
-    await database.run(sql, [
-      this.id,
-      this.dueDate,
-      this.lastMenstrualPeriod,
-      this.notes,
-      this.createdAt,
-      this.updatedAt
-    ]);
-    
-    return this;
+    const data = {
+      dueDate: new Date(this.dueDate),
+      lastMenstrualPeriod: new Date(this.lastMenstrualPeriod),
+      notes: this.notes,
+    };
+
+    if (this.id) {
+      // Update existing pregnancy
+      const updated = await prisma.pregnancyData.update({
+        where: { id: this.id },
+        data: data,
+      });
+      return new Pregnancy(updated);
+    } else {
+      // Create new pregnancy
+      const created = await prisma.pregnancyData.create({
+        data: data,
+      });
+      return new Pregnancy(created);
+    }
   }
 
   static async getCurrent() {
-    const sql = 'SELECT * FROM pregnancy_data ORDER BY created_at DESC LIMIT 1';
-    const row = await database.get(sql);
+    const pregnancy = await prisma.pregnancyData.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
     
-    if (row) {
-      return new Pregnancy({
-        id: row.id,
-        dueDate: row.due_date,
-        lastMenstrualPeriod: row.last_menstrual_period,
-        notes: row.notes,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      });
+    if (pregnancy) {
+      return new Pregnancy(pregnancy);
     }
     
     return null;
   }
 
   static async delete(id) {
-    const sql = 'DELETE FROM pregnancy_data WHERE id = ?';
-    await database.run(sql, [id]);
+    await prisma.pregnancyData.delete({
+      where: { id },
+    });
   }
 
   toJSON() {

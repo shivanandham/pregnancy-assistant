@@ -96,9 +96,7 @@ class TrackerProvider with ChangeNotifier {
     _clearSymptomsError();
 
     try {
-      print('Loading symptoms...');
       _symptoms = await ApiService.getSymptoms();
-      print('Loaded ${_symptoms.length} symptoms');
       notifyListeners();
     } catch (e) {
       print('Error loading symptoms: $e');

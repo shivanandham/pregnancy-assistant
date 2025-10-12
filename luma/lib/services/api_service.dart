@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/chat_message.dart';
+import '../models/chat_session.dart';
 import '../models/pregnancy.dart';
 import '../models/symptom.dart';
 import '../models/appointment.dart';
@@ -24,7 +25,6 @@ class ApiService {
       );
       return response.statusCode == 200;
     } catch (e) {
-      print('Error checking API health: $e');
       return false;
     }
   }
@@ -62,11 +62,12 @@ class ApiService {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
           return Pregnancy.fromJson(data['data']);
+        } else {
         }
       }
       return null;
     } catch (e) {
-      print('Error saving pregnancy data: $e');
+      print('❌ Error saving pregnancy data: $e');
       return null;
     }
   }
@@ -74,28 +75,22 @@ class ApiService {
   // Symptoms API
   static Future<List<Symptom>> getSymptoms() async {
     try {
-      print('Making API call to: $baseUrl/api/symptoms');
       final response = await http.get(
         Uri.parse('$baseUrl/api/symptoms'),
         headers: _headers,
       );
 
-      print('Response status: ${response.statusCode}');
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('API response data: $data');
         if (data['success'] == true && data['data'] != null) {
           final symptoms = (data['data'] as List)
               .map((item) {
-                print('Parsing symptom: $item');
                 return Symptom.fromJson(item);
               })
               .toList();
-          print('Successfully parsed ${symptoms.length} symptoms');
           return symptoms;
         }
       }
-      print('No symptoms found or API error');
       return [];
     } catch (e) {
       print('Error getting symptoms: $e');
@@ -298,6 +293,7 @@ class ApiService {
   static Future<ChatMessage?> sendChatMessage({
     required String message,
     String? context,
+    String? sessionId,
   }) async {
     try {
       final response = await http.post(
@@ -306,6 +302,7 @@ class ApiService {
         body: jsonEncode({
           'message': message,
           'context': context,
+          'sessionId': sessionId,
         }),
       );
 
@@ -314,13 +311,21 @@ class ApiService {
         
         if (data['success'] == true && data['data'] != null) {
           final assistantMessage = data['data']['assistantMessage'];
+          
           return ChatMessage(
-            id: assistantMessage['id'],
-            content: assistantMessage['content'],
+            id: assistantMessage['id']?.toString() ?? '',
+            content: assistantMessage['content']?.toString() ?? '',
             type: MessageType.assistant,
-            timestamp: DateTime.parse(assistantMessage['timestamp']),
-            context: assistantMessage['context'],
+            timestamp: DateTime.parse(assistantMessage['timestamp']?.toString() ?? DateTime.now().toIso8601String()),
+            context: assistantMessage['context']?.toString(),
             isError: assistantMessage['isError'] ?? false,
+            isDiagnostic: assistantMessage['isDiagnostic'] ?? false,
+            diagnosticQuestions: assistantMessage['diagnosticQuestions'] != null 
+                ? List<String>.from(assistantMessage['diagnosticQuestions']) 
+                : null,
+            diagnosticAnswers: assistantMessage['diagnosticAnswers'],
+            parentMessageId: assistantMessage['parentMessageId']?.toString(),
+            sessionId: assistantMessage['sessionId']?.toString(),
           );
         }
       }
@@ -332,6 +337,7 @@ class ApiService {
         timestamp: DateTime.now(),
         context: context,
         isError: true,
+        isDiagnostic: false,
       );
     } catch (e) {
       print('Error sending chat message: $e');
@@ -342,6 +348,7 @@ class ApiService {
         timestamp: DateTime.now(),
         context: context,
         isError: true,
+        isDiagnostic: false,
       );
     }
   }
@@ -414,11 +421,12 @@ class ApiService {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['data'] != null) {
           return UserProfile.fromJson(data['data']);
+        } else {
         }
       }
       return null;
     } catch (e) {
-      print('Error getting user profile: $e');
+      print('❌ Error getting user profile: $e');
       return null;
     }
   }
@@ -482,6 +490,137 @@ class ApiService {
     } catch (e) {
       print('Error getting profile context: $e');
       return null;
+    }
+  }
+
+  // Chat Session Methods
+  static Future<List<ChatSession>> getChatSessions() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/chat-sessions'),
+        headers: ApiConfig.headers,
+      ).timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final sessions = (data['data'] as List)
+              .map((session) => ChatSession.fromJson(session))
+              .toList();
+          return sessions;
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error getting chat sessions: $e');
+      return [];
+    }
+  }
+
+  static Future<ChatSession?> getActiveChatSession() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/chat-sessions/active'),
+        headers: ApiConfig.headers,
+      ).timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return ChatSession.fromJson(data['data']);
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error getting active chat session: $e');
+      return null;
+    }
+  }
+
+  static Future<ChatSession?> createChatSession({String? title}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/chat-sessions'),
+        headers: ApiConfig.headers,
+        body: json.encode({'title': title ?? 'New Chat'}),
+      ).timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return ChatSession.fromJson(data['data']);
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error creating chat session: $e');
+      return null;
+    }
+  }
+
+  static Future<List<ChatMessage>> getChatSessionMessages(String sessionId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/chat-sessions/$sessionId'),
+        headers: ApiConfig.headers,
+      ).timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true && data['data']['messages'] != null) {
+          final messages = (data['data']['messages'] as List)
+              .map((message) => ChatMessage.fromJson(message))
+              .toList();
+          return messages;
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error getting session messages: $e');
+      return [];
+    }
+  }
+
+  static Future<bool> setActiveChatSession(String sessionId) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/api/chat-sessions/$sessionId/activate'),
+        headers: ApiConfig.headers,
+      ).timeout(ApiConfig.timeout);
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error setting active chat session: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> updateChatSessionTitle(String sessionId, String title) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/api/chat-sessions/$sessionId/title'),
+        headers: ApiConfig.headers,
+        body: json.encode({'title': title}),
+      ).timeout(ApiConfig.timeout);
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error updating chat session title: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> deleteChatSession(String sessionId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.baseUrl}/api/chat-sessions/$sessionId'),
+        headers: ApiConfig.headers,
+      ).timeout(ApiConfig.timeout);
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error deleting chat session: $e');
+      return false;
     }
   }
 }

@@ -1,0 +1,413 @@
+{
+  "info": {
+    "name": "Luma Pregnancy Assistant API",
+    "description": "Complete API test suite for the Luma Pregnancy Assistant backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pregnancyId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "symptomId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "appointmentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "weightId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "chatMessageId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create User Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"height\": 165.0,\n  \"weight\": 62.0,\n  \"prePregnancyWeight\": 58.0,\n  \"age\": 28,\n  \"gender\": \"female\",\n  \"locality\": \"Mumbai, India\",\n  \"timezone\": \"Asia/Kolkata\",\n  \"medicalHistory\": [\"gestational diabetes\", \"mild anemia\"],\n  \"allergies\": [\"shellfish\", \"pollen\"],\n  \"medications\": [\"prenatal vitamins\", \"iron supplements\"],\n  \"lifestyle\": {\n    \"diet\": \"vegetarian with fish\",\n    \"exercise\": \"prenatal yoga 3x/week\",\n    \"smoking\": \"never\",\n    \"alcohol\": \"none during pregnancy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user-profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weight\": 63.0,\n  \"medications\": [\"prenatal vitamins\", \"iron supplements\", \"calcium\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user-profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pregnancy Data",
+      "item": [
+        {
+          "name": "Get Pregnancy Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pregnancy",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pregnancy"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Pregnancy Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dueDate\": \"2025-07-15T00:00:00.000Z\",\n  \"lastMenstrualPeriod\": \"2024-10-08T00:00:00.000Z\",\n  \"notes\": \"First pregnancy, very excited!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pregnancy",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pregnancy"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Symptoms",
+      "item": [
+        {
+          "name": "Get All Symptoms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/symptoms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "symptoms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Symptom",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"morning_sickness\",\n  \"severity\": \"moderate\",\n  \"dateTime\": \"2024-10-15T08:00:00.000Z\",\n  \"notes\": \"Nausea in the morning, better after eating\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/symptoms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "symptoms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Symptoms by Date Range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/symptoms?startDate=2024-10-01&endDate=2024-10-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "symptoms"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-10-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-10-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"First Prenatal Visit\",\n  \"type\": \"prenatal\",\n  \"dateTime\": \"2024-10-20T10:00:00.000Z\",\n  \"location\": \"City Hospital\",\n  \"doctor\": \"Dr. Sarah Johnson\",\n  \"notes\": \"Initial checkup and blood tests\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Upcoming Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/upcoming",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "upcoming"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Weight Tracking",
+      "item": [
+        {
+          "name": "Get All Weight Entries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/weight",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "weight"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Weight Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weight\": 62.5,\n  \"dateTime\": \"2024-10-15T08:00:00.000Z\",\n  \"notes\": \"Weekly weight check\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/weight",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "weight"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Chat Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hello! I just found out I'm pregnant and I'm so excited!\",\n  \"context\": \"First time user, just discovered pregnancy\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Chat History",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Knowledge Base",
+      "item": [
+        {
+          "name": "Get Knowledge Facts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/knowledge/facts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "knowledge", "facts"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Knowledge",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/knowledge/search?query=morning sickness",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "knowledge", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "morning sickness"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,94 +1,89 @@
-const { v4: uuidv4 } = require('uuid');
-const database = require('../config/database');
+const prisma = require('../lib/prisma');
 
 class UserProfile {
   constructor(data) {
-    this.id = data.id || uuidv4();
-    this.height = data.height || null; // in cm
-    this.weight = data.weight || null; // in kg
-    this.prePregnancyWeight = data.prePregnancyWeight || null; // in kg
-    this.age = data.age || null;
-    this.gender = data.gender || 'female'; // default to female for pregnancy app
-    this.locality = data.locality || null; // city, country
-    this.timezone = data.timezone || null;
-    this.medicalHistory = data.medicalHistory || null; // JSON string
-    this.allergies = data.allergies || null; // JSON string
-    this.medications = data.medications || null; // JSON string
-    this.lifestyle = data.lifestyle || null; // JSON string (diet, exercise, etc.)
-    this.createdAt = data.createdAt || new Date().toISOString();
-    this.updatedAt = data.updatedAt || new Date().toISOString();
+    this.id = data.id;
+    this.height = data.height;
+    this.weight = data.weight;
+    this.prePregnancyWeight = data.prePregnancyWeight;
+    this.age = data.age;
+    this.gender = data.gender || 'female';
+    this.locality = data.locality;
+    this.timezone = data.timezone;
+    this.medicalHistory = data.medicalHistory;
+    this.allergies = data.allergies;
+    this.medications = data.medications;
+    this.lifestyle = data.lifestyle;
+    this.createdAt = data.createdAt;
+    this.updatedAt = data.updatedAt;
   }
 
   async save() {
-    const sql = `
-      INSERT OR REPLACE INTO user_profiles 
-      (id, height, weight, pre_pregnancy_weight, age, gender, locality, timezone, 
-       medical_history, allergies, medications, lifestyle, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    
-    await database.run(sql, [
-      this.id,
-      this.height,
-      this.weight,
-      this.prePregnancyWeight,
-      this.age,
-      this.gender,
-      this.locality,
-      this.timezone,
-      this.medicalHistory ? JSON.stringify(this.medicalHistory) : null,
-      this.allergies ? JSON.stringify(this.allergies) : null,
-      this.medications ? JSON.stringify(this.medications) : null,
-      this.lifestyle ? JSON.stringify(this.lifestyle) : null,
-      this.createdAt,
-      this.updatedAt
-    ]);
-    
-    return this;
+    const data = {
+      height: this.height,
+      weight: this.weight,
+      prePregnancyWeight: this.prePregnancyWeight,
+      age: this.age,
+      gender: this.gender,
+      locality: this.locality,
+      timezone: this.timezone,
+      medicalHistory: this.medicalHistory,
+      allergies: this.allergies,
+      medications: this.medications,
+      lifestyle: this.lifestyle,
+    };
+
+    if (this.id) {
+      // Update existing profile
+      const updated = await prisma.userProfile.update({
+        where: { id: this.id },
+        data: data,
+      });
+      return new UserProfile(updated);
+    } else {
+      // Create new profile
+      const created = await prisma.userProfile.create({
+        data: data,
+      });
+      return new UserProfile(created);
+    }
   }
 
   static async get() {
-    const sql = 'SELECT * FROM user_profiles LIMIT 1';
-    const row = await database.get(sql);
+    const profile = await prisma.userProfile.findFirst();
     
-    if (row) {
-      return new UserProfile({
-        id: row.id,
-        height: row.height,
-        weight: row.weight,
-        prePregnancyWeight: row.pre_pregnancy_weight,
-        age: row.age,
-        gender: row.gender,
-        locality: row.locality,
-        timezone: row.timezone,
-        medicalHistory: row.medical_history ? JSON.parse(row.medical_history) : null,
-        allergies: row.allergies ? JSON.parse(row.allergies) : null,
-        medications: row.medications ? JSON.parse(row.medications) : null,
-        lifestyle: row.lifestyle ? JSON.parse(row.lifestyle) : null,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      });
+    if (profile) {
+      return new UserProfile(profile);
     }
     
     return null;
   }
 
   static async update(updates) {
-    const profile = await UserProfile.get();
-    if (!profile) {
+    const existingProfile = await UserProfile.get();
+    if (!existingProfile) {
       throw new Error('No user profile found');
     }
 
-    // Update fields
-    Object.keys(updates).forEach(key => {
-      if (updates[key] !== undefined) {
-        profile[key] = updates[key];
-      }
+    const updated = await prisma.userProfile.update({
+      where: { id: existingProfile.id },
+      data: updates,
     });
 
-    profile.updatedAt = new Date().toISOString();
-    await profile.save();
-    return profile;
+    return new UserProfile(updated);
+  }
+
+  static async delete() {
+    const existingProfile = await UserProfile.get();
+    if (!existingProfile) {
+      throw new Error('No user profile found');
+    }
+
+    await prisma.userProfile.delete({
+      where: { id: existingProfile.id },
+    });
+
+    return true;
   }
 
   // Helper methods
@@ -125,16 +120,16 @@ class UserProfile {
   getMedicalContext() {
     const context = [];
     
-    if (this.medicalHistory && this.medicalHistory.length > 0) {
+    if (this.medicalHistory && Array.isArray(this.medicalHistory) && this.medicalHistory.length > 0) {
       context.push(`Medical history: ${this.medicalHistory.join(', ')}`);
     }
-    if (this.allergies && this.allergies.length > 0) {
+    if (this.allergies && Array.isArray(this.allergies) && this.allergies.length > 0) {
       context.push(`Allergies: ${this.allergies.join(', ')}`);
     }
-    if (this.medications && this.medications.length > 0) {
+    if (this.medications && Array.isArray(this.medications) && this.medications.length > 0) {
       context.push(`Current medications: ${this.medications.join(', ')}`);
     }
-    if (this.lifestyle) {
+    if (this.lifestyle && typeof this.lifestyle === 'object') {
       const lifestyleItems = [];
       if (this.lifestyle.diet) lifestyleItems.push(`Diet: ${this.lifestyle.diet}`);
       if (this.lifestyle.exercise) lifestyleItems.push(`Exercise: ${this.lifestyle.exercise}`);

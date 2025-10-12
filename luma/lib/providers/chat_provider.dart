@@ -7,6 +7,10 @@ class ChatProvider with ChangeNotifier {
   bool _isLoading = false;
   bool _isTyping = false;
   String? _error;
+  
+  // Callback to notify ChatSessionProvider when session title might be updated
+  Function()? onSessionUpdated;
+  
 
   // Getters
   List<ChatMessage> get messages => _messages;
@@ -29,8 +33,30 @@ class ChatProvider with ChangeNotifier {
     }
   }
 
+  // Load messages for a specific session
+  Future<void> loadSessionMessages(String sessionId) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      _messages = await ApiService.getChatSessionMessages(sessionId);
+      notifyListeners();
+    } catch (e) {
+      _setError('Failed to load session messages: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Clear messages (for new sessions)
+  void clearMessages() {
+    _messages = [];
+    _clearError();
+    notifyListeners();
+  }
+
   // Send message
-  Future<void> sendMessage(String content, {String? context}) async {
+  Future<void> sendMessage(String content, {String? context, String? sessionId}) async {
     // Add user message immediately
     final userMessage = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -39,6 +65,7 @@ class ChatProvider with ChangeNotifier {
       timestamp: DateTime.now(),
       context: context,
     );
+    
 
     _messages.add(userMessage);
     _setTyping(true);
@@ -49,10 +76,15 @@ class ChatProvider with ChangeNotifier {
       final assistantMessage = await ApiService.sendChatMessage(
         message: content,
         context: context,
+        sessionId: sessionId,
       );
 
       if (assistantMessage != null) {
         _messages.add(assistantMessage);
+        notifyListeners();
+        
+        // Notify ChatSessionProvider that session might be updated (title change)
+        onSessionUpdated?.call();
       } else {
         // Add error message if no response
         final errorMessage = ChatMessage(
@@ -62,6 +94,7 @@ class ChatProvider with ChangeNotifier {
           timestamp: DateTime.now(),
           context: context,
           isError: true,
+          isDiagnostic: false,
         );
         _messages.add(errorMessage);
       }
@@ -74,6 +107,7 @@ class ChatProvider with ChangeNotifier {
         timestamp: DateTime.now(),
         context: context,
         isError: true,
+        isDiagnostic: false,
       );
       _messages.add(errorMessage);
       _setError('Failed to send message: $e');

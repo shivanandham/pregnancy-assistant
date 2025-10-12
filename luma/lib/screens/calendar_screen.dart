@@ -236,6 +236,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "calendar_add_button",
         onPressed: () => _showAddAppointmentDialog(),
         backgroundColor: AppTheme.primaryColor,
         child: const Icon(Icons.add, color: Colors.white),
