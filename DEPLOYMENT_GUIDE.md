@@ -14,14 +14,16 @@ This guide explains how to deploy and distribute the Luma pregnancy assistant ap
    ./scripts/deploy.sh build  # Just increment build number
    ```
 
-2. **Follow the prompts** to create a GitHub release
-
-3. **Upload the APK** to the GitHub release
+2. **That's it!** GitHub Actions automatically:
+   - Builds the APK in the cloud
+   - Creates a GitHub release
+   - Uploads the APK
+   - Generates release notes from CHANGELOG.md
 
 ### For Users (Installing/Updating)
 
 1. **Initial Installation:**
-   - Download APK from [GitHub Releases](https://github.com/itachiuchiha/pregnancy-assistant/releases)
+   - Download APK from [GitHub Releases](https://github.com/shivanandham/pregnancy-assistant/releases)
    - Enable "Install unknown apps" in Android settings
    - Install the APK
 
@@ -34,6 +36,7 @@ This guide explains how to deploy and distribute the Luma pregnancy assistant ap
 
 ### Architecture
 - **Distribution**: GitHub Releases (no Play Store needed)
+- **Build**: GitHub Actions (automated cloud builds)
 - **Update Check**: GitHub API integration
 - **Download**: Direct APK download from releases
 - **Installation**: Android package installer
@@ -63,10 +66,31 @@ This guide explains how to deploy and distribute the Luma pregnancy assistant ap
 
 5. **Deployment Script** (`scripts/deploy.sh`)
    - Orchestrates the entire deployment process
-   - Builds APK, creates git tags, pushes to GitHub
-   - Provides next steps for manual release creation
+   - Creates git tags, pushes to GitHub
+   - Triggers GitHub Actions for automated release
+
+6. **GitHub Actions** (`.github/workflows/release.yml`)
+   - Automatically builds APK in the cloud
+   - Creates GitHub releases with proper formatting
+   - Uploads APK and generates release notes
 
 ## 🔧 Configuration
+
+### GitHub Actions Setup
+
+The deployment system uses GitHub Actions for automated builds and releases. The workflow is configured in `.github/workflows/release.yml` and triggers automatically when you push a version tag.
+
+**Required GitHub Settings:**
+- Repository must be public or have GitHub Actions enabled
+- No additional secrets or tokens needed (uses built-in `GITHUB_TOKEN`)
+- Flutter and Java are automatically set up in the cloud
+
+**Workflow Features:**
+- ✅ Builds APK using Flutter 3.9.2
+- ✅ Generates release notes from CHANGELOG.md
+- ✅ Creates GitHub release with proper formatting
+- ✅ Uploads APK as release asset
+- ✅ Runs on every version tag push
 
 ### GitHub Repository Settings
 
@@ -121,8 +145,8 @@ The app will request these permissions when needed:
    ```bash
    ./scripts/deploy.sh patch  # or minor/major
    ```
-5. **Create GitHub release** manually using the provided template
-6. **Upload APK** to the release
+5. **Wait 2-3 minutes** for GitHub Actions to complete
+6. **Check the release** at GitHub Releases page
 
 ### Version Bumping
 

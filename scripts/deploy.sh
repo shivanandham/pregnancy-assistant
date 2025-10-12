@@ -153,16 +153,20 @@ show_next_steps() {
     local apk_path="$LUMA_DIR/build/app/outputs/flutter-apk/app-release.apk"
     
     echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"
-    echo -e "${BLUE}📋 Next steps:${NC}"
-    echo -e "  1. Go to GitHub: https://github.com/itachiuchiha/pregnancy-assistant/releases"
-    echo -e "  2. Click 'Create a new release'"
-    echo -e "  3. Select tag: $tag_name"
-    echo -e "  4. Upload APK: $apk_path"
-    echo -e "  5. Add release notes from CHANGELOG.md"
-    echo -e "  6. Publish the release"
+    echo -e "${BLUE}📋 What happens next:${NC}"
+    echo -e "  ✅ Git tag $tag_name created and pushed"
+    echo -e "  🚀 GitHub Actions will automatically:"
+    echo -e "     • Build the APK in the cloud"
+    echo -e "     • Create a GitHub release"
+    echo -e "     • Upload the APK"
+    echo -e "     • Generate release notes from CHANGELOG.md"
     echo -e ""
-    echo -e "${YELLOW}📱 APK Location: $apk_path${NC}"
+    echo -e "${YELLOW}📱 Local APK: $apk_path${NC}"
     echo -e "${YELLOW}🏷️  Tag: $tag_name${NC}"
+    echo -e "${BLUE}🔗 Monitor progress: https://github.com/shivanandham/pregnancy-assistant/actions${NC}"
+    echo -e "${BLUE}📦 Release will appear at: https://github.com/shivanandham/pregnancy-assistant/releases${NC}"
+    echo -e ""
+    echo -e "${GREEN}⏱️  The release will be ready in 2-3 minutes!${NC}"
 }
 
 # Main execution
@@ -186,7 +190,6 @@ main() {
     # Run deployment steps
     check_git_status
     bump_version "$bump_type"
-    build_apk
     create_git_tag
     
     show_next_steps
