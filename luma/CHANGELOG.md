@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0+4] - 2025-10-13 01:52:33
+
+### minor
+- Automated version bump
+
 ## [1.0.0+3] - 2025-10-13 01:47:27
 
 ### build
