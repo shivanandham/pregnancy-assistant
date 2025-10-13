@@ -179,16 +179,6 @@ class ChatSession {
       }
     });
   }
-
-  static async incrementMessageCount(id) {
-    await prisma.chatSession.update({
-      where: { id },
-      data: { 
-        messageCount: { increment: 1 },
-        updatedAt: new Date()
-      }
-    });
-  }
 }
 
 module.exports = ChatSession;

@@ -90,26 +90,44 @@ ${ChatController.loadPregnancyGuide()}
         });
       }
 
+      // Ensure we have a valid session
+      let validSessionId = sessionId;
+      const ChatSession = require('../models/ChatSession');
+      
+      if (validSessionId) {
+        // Verify the session exists
+        const session = await ChatSession.getById(validSessionId);
+        if (!session) {
+          // Session doesn't exist, create a new one
+          const newSession = await ChatSession.createNew();
+          validSessionId = newSession.id;
+        }
+      } else {
+        // No session provided, get or create active session
+        let activeSession = await ChatSession.getActive();
+        if (!activeSession) {
+          activeSession = await ChatSession.createNew();
+        }
+        validSessionId = activeSession.id;
+      }
+
       // Save user message
       const userMessage = new ChatMessage({
         content: message,
         type: 'user',
         context,
-        sessionId: sessionId
+        sessionId: validSessionId
       });
       await userMessage.save();
 
       // Update message count for the session (user message)
-      const ChatSession = require('../models/ChatSession');
-      await ChatSession.incrementMessageCount(sessionId);
+      await ChatSession.incrementMessageCount(validSessionId);
 
       // Auto-generate title for new sessions (if this is the first message)
-      if (sessionId) {
-        const session = await ChatSession.getById(sessionId);
-        if (session && session.title === 'New Chat') {
-          const generatedTitle = ChatController.generateChatTitle(message);
-          await ChatSession.updateTitle(sessionId, generatedTitle);
-        }
+      const session = await ChatSession.getById(validSessionId);
+      if (session && session.title === 'New Chat') {
+        const generatedTitle = ChatController.generateChatTitle(message);
+        await ChatSession.updateTitle(validSessionId, generatedTitle);
       }
 
       // Get current pregnancy data for context
@@ -191,7 +209,7 @@ ${ChatController.loadPregnancyGuide()}
           isDiagnostic: true,
           diagnosticQuestions: diagnosticAnalysis.questions,
           parentMessageId: userMessage.id,
-          sessionId: sessionId
+          sessionId: validSessionId
         });
         await diagnosticMessage.save();
         
@@ -209,7 +227,7 @@ ${ChatController.loadPregnancyGuide()}
           content: aiResponse,
           type: 'assistant',
           context: currentWeek ? `Week ${currentWeek}` : null,
-          sessionId: sessionId
+          sessionId: validSessionId
         });
         await assistantMessage.save();
       } else {
@@ -217,7 +235,7 @@ ${ChatController.loadPregnancyGuide()}
       }
 
       // Update message count for the session (assistant message)
-      await ChatSession.incrementMessageCount(sessionId);
+      await ChatSession.incrementMessageCount(validSessionId);
 
       // Extract and store knowledge asynchronously
       const knowledgeExtractor = require('../services/knowledgeExtractor');
@@ -245,11 +263,25 @@ ${ChatController.loadPregnancyGuide()}
     } catch (error) {
       console.error('Error in chat:', error);
       
+      // Try to get a valid session for error message
+      let errorSessionId = null;
+      try {
+        const ChatSession = require('../models/ChatSession');
+        let activeSession = await ChatSession.getActive();
+        if (!activeSession) {
+          activeSession = await ChatSession.createNew();
+        }
+        errorSessionId = activeSession.id;
+      } catch (sessionError) {
+        console.error('Error getting session for error message:', sessionError);
+      }
+      
       // Save error message
       const errorMessage = new ChatMessage({
         content: 'Sorry, I encountered an error. Please try again later.',
         type: 'assistant',
-        isError: true
+        isError: true,
+        sessionId: errorSessionId
       });
       await errorMessage.save();
       
@@ -396,7 +428,7 @@ ${ChatController.loadPregnancyGuide()}
         context: currentWeek ? `Week ${currentWeek}` : null,
         diagnosticAnswers: answers,
         parentMessageId: messageId,
-        sessionId: sessionId
+        sessionId: diagnosticMessage.sessionId
       });
       await assistantMessage.save();
 
