@@ -2,7 +2,7 @@
 
 /**
  * Database Deployment Script
- * Automatically deploys database schema to Supabase production environment
+ * Automatically deploys database schema to self-hosted PostgreSQL production environment
  * 
  * Usage: node scripts/deploy-database.js
  */
@@ -16,10 +16,8 @@ class DatabaseDeployer {
   constructor() {
     this.isProduction = process.env.NODE_ENV === 'production';
     this.requiredEnvVars = [
-      'SUPABASE_URL',
-      'SUPABASE_ANON_KEY',
-      'SUPABASE_SERVICE_ROLE_KEY',
-      'SUPABASE_DB_PASSWORD'
+      'PROD_DB_HOST',
+      'PROD_DB_PASSWORD'
     ];
   }
 
@@ -125,7 +123,7 @@ class DatabaseDeployer {
     try {
       this.log('🚀 Starting database deployment...');
       this.log(`Environment: ${process.env.NODE_ENV}`);
-      this.log(`Supabase URL: ${process.env.SUPABASE_URL}`);
+      this.log(`Database Host: ${process.env.PROD_DB_HOST || 'localhost'}`);
       
       // Step 1: Check environment
       this.checkEnvironment();
@@ -145,8 +143,8 @@ class DatabaseDeployer {
       this.log('🎉 Database deployment completed successfully!', 'success');
       this.log('');
       this.log('📋 Next steps:');
-      this.log('1. Your Supabase database is ready for production');
-      this.log('2. Deploy your backend to Railway');
+      this.log('1. Your PostgreSQL database is ready for production');
+      this.log('2. Deploy your backend to DigitalOcean');
       this.log('3. Update your Flutter app with the production API URL');
       this.log('4. Test your application end-to-end');
       

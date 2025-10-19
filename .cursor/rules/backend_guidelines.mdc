@@ -1,0 +1,35 @@
+---
+description: "Backend development guidelines and API structure"
+alwaysApply: false
+---
+# Backend Development Guidelines
+
+## API Structure
+- Express.js backend with Prisma ORM
+- Main endpoints: /api/chat, /api/pregnancy, /api/symptoms, /api/appointments, /api/weight, /api/home
+- Security: Helmet.js, CORS, rate limiting, input validation with Joi
+- AI integration: Google Gemini API with pregnancy-specific context and medical disclaimers
+
+## Database Schema (Prisma)
+- UserProfile: User demographics and medical information
+- PregnancyData: Due date, LMP, and pregnancy timeline
+- ChatSession/ChatMessage: AI conversation management with diagnostic support
+- Symptom/Appointment/WeightEntry: Health tracking data
+- KnowledgeFact/ConversationChunk: Extracted knowledge and searchable conversations
+- PregnancyTip/ChecklistCompletion: Tips and daily task tracking
+
+## Environment Configuration
+- Development: http://192.168.0.8:3000 (local network)
+- Production: https://pregnancy-assistant-production.up.railway.app
+- Database: Supabase PostgreSQL with connection pooling
+- AI: Google Gemini API key required
+
+## Common Commands
+- Backend: `npm run dev` (development), `npm run deploy:db` (database)
+- Database: `npm run db:studio` (Prisma Studio)
+
+## AI Services Guidelines
+- Always include medical disclaimers in AI responses
+- Use pregnancy-specific context with current week information
+- Implement diagnostic questioning for symptom assessment
+- Extract and store knowledge from conversations for future reference

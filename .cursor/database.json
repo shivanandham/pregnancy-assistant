@@ -1,0 +1,17 @@
+{
+  "databases": [
+    {
+      "name": "luma",
+      "type": "postgresql",
+      "url": "postgresql://postgres:postgres@localhost:5432/luma",
+      "description": "Luma pregnancy assistant database"
+    },
+    {
+      "name": "luma-production",
+      "type": "postgresql",
+      "url": "postgresql://postgres.fxnulpzsuyjarpqrcidn:postgres@aws-1-us-east-2.pooler.supabase.com:5432/postgres",
+      "description": "Luma pregnancy assistant production database"
+    }
+  ],
+  "primary_database": "luma"
+}

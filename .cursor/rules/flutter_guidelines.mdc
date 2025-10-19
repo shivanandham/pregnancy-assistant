@@ -1,0 +1,32 @@
+---
+description: Frontend flutter guidelines
+alwaysApply: false
+---
+# Flutter App Development Guidelines
+
+## App Structure
+- State management: 6 providers (PregnancyProvider, ChatProvider, ChatSessionProvider, TrackerProvider, UserProfileProvider, HomeProvider)
+- Key screens: HomeScreen (dashboard), ChatbotScreen, TrackerScreen, CalendarScreen, UserProfileScreen
+- UI: Material Design 3 with pregnancy-themed color palette, responsive design
+
+## Common Commands
+- Flutter: `flutter pub get`, `flutter run`, `flutter build apk`
+
+## UI/UX Guidelines
+- Use pregnancy-themed color palette (soft pastels)
+- Implement Material Design 3 with smooth animations
+- Ensure responsive design for different screen sizes
+- Include accessibility features for inclusive design
+- Maintain consistent pregnancy-focused user experience
+
+## State Management
+- Use Provider pattern for all state management
+- Implement proper error handling and loading states
+- Optimize for performance with appropriate widget rebuilding
+- Handle offline scenarios gracefully
+
+## Pregnancy-Specific Features
+- Accurate pregnancy calculations and timeline display
+- Visual progress indicators with trimester-specific colors
+- Context-aware AI responses based on current pregnancy week
+- Health tracking with appropriate medical disclaimers

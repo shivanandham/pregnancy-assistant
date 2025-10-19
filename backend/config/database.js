@@ -14,26 +14,19 @@ class DatabaseConfig {
       
       return `postgresql://${user}:${password}@${host}:${port}/${database}`;
     } else {
-      // Supabase for production
-      const supabaseUrl = process.env.SUPABASE_URL;
-      const supabaseDbPassword = process.env.SUPABASE_DB_PASSWORD;
+      // Self-hosted PostgreSQL on DigitalOcean for production
+      const host = process.env.PROD_DB_HOST || 'localhost';
+      const port = process.env.PROD_DB_PORT || 5432;
+      const database = process.env.PROD_DB_NAME || 'pregnancy_assistant';
+      const user = process.env.PROD_DB_USER || 'postgres';
+      const password = process.env.PROD_DB_PASSWORD;
       
-      if (!supabaseUrl || !supabaseDbPassword) {
-        throw new Error('Supabase URL and password are required for production');
+      if (!password) {
+        throw new Error('PROD_DB_PASSWORD is required for production');
       }
-
-      const projectRef = this.extractProjectRef(supabaseUrl);
-      // Use session pooler for IPv4 compatibility
-      return `postgresql://postgres.${projectRef}:${supabaseDbPassword}@aws-1-us-east-2.pooler.supabase.com:5432/postgres`;
+      
+      return `postgresql://${user}:${password}@${host}:${port}/${database}`;
     }
-  }
-
-  static extractProjectRef(url) {
-    const match = url.match(/https:\/\/([^.]+)\.supabase\.co/);
-    if (!match) {
-      throw new Error('Invalid Supabase URL format');
-    }
-    return match[1];
   }
 
   static getEnvironmentInfo() {
@@ -42,7 +35,7 @@ class DatabaseConfig {
     
     return {
       environment: isDevelopment ? 'development' : 'production',
-      database: isDevelopment ? 'Local PostgreSQL' : 'Supabase PostgreSQL',
+      database: isDevelopment ? 'Local PostgreSQL' : 'Self-hosted PostgreSQL (DigitalOcean)',
       url: databaseUrl.replace(/\/\/.*@/, '//***:***@') // Hide credentials in logs
     };
   }

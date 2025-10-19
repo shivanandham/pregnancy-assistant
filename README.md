@@ -39,7 +39,7 @@ A comprehensive Flutter-based pregnancy tracking and AI assistant app designed t
 
 - **Frontend**: Flutter (Android-focused, cross-platform ready)
 - **Backend**: Node.js/Express API with Prisma ORM
-- **Database**: Supabase PostgreSQL (Production) / Local PostgreSQL (Development)
+- **Database**: Self-hosted PostgreSQL (Production) / Local PostgreSQL (Development)
 - **AI**: Google Gemini API via secure backend proxy
 - **State Management**: Provider pattern
 - **Notifications**: Flutter Local Notifications
@@ -50,15 +50,15 @@ A comprehensive Flutter-based pregnancy tracking and AI assistant app designed t
 
 1. **Flutter SDK** (3.9.2 or higher)
 2. **Node.js** (16 or higher)
-3. **Supabase Account** (for production database)
+3. **DigitalOcean Droplet** (for production deployment)
 4. **Google Gemini API Key**
 
-### Database Setup (Supabase)
+### Database Setup (Self-hosted PostgreSQL)
 
-1. **Create Supabase Project**:
-   - Go to [supabase.com](https://supabase.com)
-   - Create new project with a strong database password
-   - Save your credentials
+1. **Set up DigitalOcean Droplet**:
+   - Create a Ubuntu 22.04 LTS droplet
+   - Install PostgreSQL on the server
+   - Configure database user and permissions
 
 2. **Configure Environment Variables**:
    ```bash
@@ -66,12 +66,13 @@ A comprehensive Flutter-based pregnancy tracking and AI assistant app designed t
    cp env.example .env
    ```
    
-   Add your Supabase credentials to `.env`:
+   Add your production database credentials to `.env`:
    ```bash
-   SUPABASE_URL=https://your-project-ref.supabase.co
-   SUPABASE_ANON_KEY=your_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   SUPABASE_DB_PASSWORD=your_database_password
+   PROD_DB_HOST=your-server-ip
+   PROD_DB_PORT=5432
+   PROD_DB_NAME=pregnancy_assistant
+   PROD_DB_USER=your_db_user
+   PROD_DB_PASSWORD=your_secure_password
    GEMINI_API_KEY=your_gemini_api_key
    NODE_ENV=production
    ```
@@ -99,10 +100,10 @@ npm install
 npm run dev
 ```
 
-3. Deploy to Railway:
-   - Follow instructions in `RAILWAY_DEPLOYMENT.md`
-   - Set environment variables in Railway dashboard
-   - Deploy from GitHub
+3. Deploy to DigitalOcean:
+   - Follow instructions in `DIGITALOCEAN_DEPLOYMENT.md`
+   - Use the automated deployment script
+   - Configure environment variables on the server
 
 ### Flutter App Setup
 
@@ -175,29 +176,21 @@ luma/build/app/outputs/bundle/release/app-release.aab
 
 ## Data Structure
 
-### Firestore Collections
+### PostgreSQL Tables
 
-- `pregnancy_data`: Singleton document with due date and LMP
+- `pregnancy_data`: Singleton record with due date and LMP
 - `symptoms`: Timestamped symptom entries
 - `appointments`: Scheduled doctor visits
-- `weight_logs`: Weight tracking entries
-- `chat_history`: AI conversation history
-- `reminders`: Notification settings
+- `weight_entries`: Weight tracking entries
+- `chat_sessions` & `chat_messages`: AI conversation history
+- `user_profiles`: User information and preferences
 
-### Security Rules
+### Database Security
 
-Since this is a single-user app, you can use basic security rules:
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-```
+Since this is a single-user app, the database is configured with:
+- Secure user credentials
+- Local network access only
+- Regular automated backups
 
 ## Customization
 
@@ -217,23 +210,23 @@ service cloud.firestore {
 ## Privacy & Security
 
 - **No Authentication**: App assumes single user per device
-- **Local Data**: All data is stored locally and synced to Firebase
-- **API Key Security**: Perplexity API key is kept secure on the backend
+- **Local Data**: All data is stored locally and synced to PostgreSQL
+- **API Key Security**: Google Gemini API key is kept secure on the backend
 - **Medical Disclaimer**: AI responses include appropriate medical disclaimers
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Firebase Connection Issues**:
-   - Ensure `google-services.json` is in the correct location
-   - Check Firebase project configuration
-   - Verify Firestore rules allow read/write
+1. **Database Connection Issues**:
+   - Ensure PostgreSQL is running on the server
+   - Check database credentials and connection string
+   - Verify network connectivity to the database server
 
 2. **API Connection Issues**:
    - Verify backend is deployed and accessible
    - Check API service URL in the app
-   - Ensure Perplexity API key is valid
+   - Ensure Google Gemini API key is valid
 
 3. **Build Issues**:
    - Run `flutter clean` and `flutter pub get`
@@ -246,14 +239,15 @@ This is a personal project, but feel free to fork and customize for your own use
 
 ## License
 
-This project is for personal use. Please respect the terms of service of all third-party services used (Firebase, Perplexity AI, etc.).
+This project is for personal use. Please respect the terms of service of all third-party services used (Google Gemini AI, etc.).
 
 ## Support
 
 For issues or questions:
 1. Check the troubleshooting section
-2. Review Firebase and Flutter documentation
+2. Review PostgreSQL and Flutter documentation
 3. Ensure all setup steps are completed correctly
+4. Check the DigitalOcean deployment guide
 
 ---
 

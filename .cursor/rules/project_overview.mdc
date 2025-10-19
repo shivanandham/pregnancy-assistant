@@ -1,0 +1,201 @@
+---
+description: "Luma Pregnancy Assistant - Comprehensive Project Overview and Architecture"
+alwaysApply: true
+---
+
+# Luma Pregnancy Assistant - Project Overview
+
+## Project Vision
+Luma is a comprehensive pregnancy tracking and AI assistant app designed to support expecting mothers throughout their pregnancy journey. The app combines traditional pregnancy tracking features with modern AI-powered assistance, providing personalized guidance, health monitoring, and educational content.
+
+## Architecture Overview
+- **Frontend**: Flutter (Dart) cross-platform mobile app with Provider state management
+- **Backend**: Node.js/Express REST API with Prisma ORM for database operations
+- **Database**: PostgreSQL (Supabase for production, local for development)
+- **AI Integration**: Google Gemini 2.5 Flash for intelligent pregnancy assistance
+- **Deployment**: Railway (backend hosting) + Supabase (database hosting)
+- **State Management**: Provider pattern with 6 main providers
+- **UI Framework**: Material Design 3 with pregnancy-themed color palette
+
+## Core Features & Capabilities
+
+### 1. Pregnancy Tracking System
+- **Week-by-week progress tracking** with visual indicators and trimester identification
+- **Due date countdown** with customizable cycle length support (22-44 days)
+- **Progress percentage calculation** based on current week vs. 40-week pregnancy
+- **Timeline visualization** with milestone tracking and important events
+- **Trimester-based color coding** and visual feedback
+
+### 2. AI-Powered Chatbot Assistant
+- **Context-aware responses** based on current pregnancy week and user profile
+- **Pregnancy-specific knowledge base** with medical disclaimers
+- **Diagnostic questioning system** for symptom assessment and follow-up
+- **Chat session management** with conversation history and searchability
+- **Knowledge extraction** from conversations for future reference and learning
+- **Medical safety guidelines** integrated into all AI responses
+
+### 3. Comprehensive Health Tracking
+- **Symptom logging** with severity levels (1-5), custom types, and notes
+- **Weight tracking** with visual charts and trend analysis
+- **Appointment management** with scheduling, reminders, and completion tracking
+- **Daily checklist system** with auto-generated tasks based on pregnancy week
+- **Photo journal capability** for weekly bump photos (planned feature)
+
+### 4. User Profile & Personalization
+- **Personal information management** (height, weight, age, medical history)
+- **Medical context integration** (allergies, medications, lifestyle factors)
+- **Timezone support** for accurate time tracking and reminders
+- **Preference storage** for customized recommendations
+- **Medical history tracking** for context-aware AI responses
+
+### 5. Knowledge Management System
+- **Pregnancy tips database** categorized by week, trimester, and topic
+- **Milestone tracking** with important events and developmental stages
+- **Automatic fact extraction** from AI conversations using Gemini
+- **Conversation chunking** for search and retrieval capabilities
+- **Knowledge categorization** (symptom, milestone, preference, medical, activity)
+
+## Technical Architecture Details
+
+### Database Schema (Prisma)
+- **UserProfile**: Demographics, medical history, preferences, timezone
+- **PregnancyData**: Due date, LMP, cycle length, pregnancy timeline
+- **ChatSession/ChatMessage**: AI conversation management with diagnostic support
+- **Symptom**: Tracking entries with severity, type, and custom categories
+- **Appointment**: Medical visits with scheduling and completion tracking
+- **WeightEntry**: Weight tracking with timestamps and notes
+- **KnowledgeFact**: Extracted knowledge from conversations with categorization
+- **ConversationChunk**: Searchable conversation segments with keywords
+- **PregnancyTip**: Weekly tips and advice with expiration dates
+- **ChecklistCompletion**: Daily task completion tracking
+
+### API Architecture
+- **RESTful endpoints** with consistent response patterns
+- **Express.js middleware** for security, validation, and logging
+- **Prisma ORM** for type-safe database operations
+- **Joi validation** for input sanitization and error handling
+- **Rate limiting** with different limits for chat vs. general API
+- **CORS configuration** with environment-specific origins
+
+### AI Integration Architecture
+- **Google Gemini 2.5 Flash** for natural language processing
+- **Context-aware prompting** with pregnancy-specific guidelines
+- **Medical disclaimer integration** in all AI responses
+- **Diagnostic questioning system** for symptom assessment
+- **Knowledge extraction pipeline** for conversation analysis
+- **Symptom detection** from natural language input
+
+## Development Guidelines & Standards
+
+### Code Organization
+- **Backend**: TypeScript/JavaScript with Express.js and Prisma
+- **Frontend**: Dart with Flutter and Provider state management
+- **Database**: PostgreSQL with Prisma schema and migrations
+- **API**: RESTful design with consistent error handling
+- **State Management**: Provider pattern with separation of concerns
+
+### Pregnancy Calculation Standards
+- **Due date calculation**: LMP + 280 days (adjustable for cycle length variations)
+- **Current week calculation**: Days since LMP ÷ 7 (rounded down)
+- **Trimester determination**: 1st (weeks 1-12), 2nd (weeks 13-26), 3rd (weeks 27-40+)
+- **Progress percentage**: Current week ÷ 40 weeks
+- **Cycle length support**: 22-44 days with automatic due date adjustment
+
+### AI Context Building
+- **Pregnancy week context** for relevant advice and recommendations
+- **User profile integration** for personalized responses
+- **Medical history consideration** for safety and appropriateness
+- **Time-aware responses** with current date/time and user timezone
+- **Conversation history** for context continuity
+- **Knowledge base integration** for consistent information
+
+## Security & Privacy Framework
+
+### Data Protection
+- **No authentication system** (single-user per device assumption)
+- **Local data storage** with cloud synchronization
+- **Backend-only API key access** for AI services
+- **Input validation** with comprehensive sanitization
+- **Rate limiting** to prevent abuse and ensure service availability
+
+### Medical Safety
+- **Medical disclaimers** in all AI responses
+- **Healthcare provider consultation reminders** for medical concerns
+- **Evidence-based information** with source attribution
+- **Symptom severity assessment** with appropriate escalation guidance
+- **Emergency situation recognition** with immediate medical advice
+
+### Privacy Considerations
+- **Single-user design** eliminates multi-user privacy concerns
+- **Local-first approach** with optional cloud sync
+- **No personal data sharing** with third parties
+- **Medical information protection** with appropriate handling
+- **Conversation privacy** with local storage options
+
+## Environment & Configuration
+
+### Development Environment
+- **Local development**: http://192.168.0.8:3000 (local network access)
+- **Database**: Local PostgreSQL with Prisma migrations
+- **AI**: Google Gemini API with development key
+- **Hot reload**: Nodemon for backend, Flutter hot reload for frontend
+
+### Production Environment
+- **Backend hosting**: Railway with automatic deployments
+- **Database**: Supabase PostgreSQL with connection pooling
+- **API endpoint**: https://pregnancy-assistant-production.up.railway.app
+- **AI**: Google Gemini API with production key
+- **Monitoring**: Health checks and error tracking
+
+### Common Development Commands
+- **Backend**: `npm run dev` (development), `npm run deploy:db` (database deployment)
+- **Flutter**: `flutter pub get`, `flutter run`, `flutter build apk`
+- **Database**: `npm run db:studio` (Prisma Studio), `npm run test:db` (connection test)
+
+## Business Logic & User Experience
+
+### Pregnancy Journey Support
+- **Onboarding flow** for initial pregnancy data setup
+- **Progressive disclosure** of features based on pregnancy stage
+- **Personalized content** based on current week and user profile
+- **Milestone celebrations** for important pregnancy events
+- **Preparation guidance** for upcoming stages and events
+
+### Health Monitoring Integration
+- **Symptom pattern recognition** for trend analysis
+- **Weight tracking** with healthy range guidance
+- **Appointment coordination** with reminder systems
+- **Medication tracking** and vitamin reminders (planned)
+- **Exercise recommendations** with pregnancy-safe activities (planned)
+
+### AI Assistant Capabilities
+- **Natural language understanding** for pregnancy-related queries
+- **Contextual responses** based on current pregnancy stage
+- **Diagnostic questioning** for symptom assessment
+- **Educational content** delivery with appropriate disclaimers
+- **Emotional support** with encouraging and supportive language
+
+## Performance & Scalability Considerations
+
+### Frontend Optimization
+- **Provider-based state management** for efficient widget rebuilding
+- **Lazy loading** for large datasets and images
+- **Caching strategies** for frequently accessed data
+- **Offline capability** with local storage and sync
+- **Memory management** for long-running app sessions
+
+### Backend Performance
+- **Database indexing** on frequently queried fields
+- **API response caching** for static content
+- **Rate limiting** to prevent abuse and ensure availability
+- **Error handling** with graceful degradation
+- **Monitoring** with health checks and performance metrics
+
+### AI Service Optimization
+- **Context optimization** for efficient prompt engineering
+- **Response caching** for common queries
+- **Error handling** with fallback responses
+- **Rate limiting** for AI API calls
+- **Cost optimization** with efficient token usage
+
+When working on this project, always prioritize user safety, medical accuracy, and pregnancy-specific considerations. Maintain appropriate medical disclaimers and encourage professional healthcare consultation for medical concerns.
