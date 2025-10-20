@@ -1,16 +1,31 @@
+const prisma = require('../lib/prisma');
 const PregnancyTip = require('../models/PregnancyTip');
 const PregnancyMilestone = require('../models/PregnancyMilestone');
 const DailyChecklist = require('../models/DailyChecklist');
-const Pregnancy = require('../models/Pregnancy');
-const ChecklistCompletion = require('../models/ChecklistCompletion');
-const UserProfile = require('../models/UserProfile');
 
 class HomeController {
+  // Calculate current pregnancy week
+  static calculateCurrentWeek(lastMenstrualPeriod) {
+    if (!lastMenstrualPeriod) return null;
+    
+    const lmp = new Date(lastMenstrualPeriod);
+    const today = new Date();
+    const diffTime = today - lmp;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const currentWeek = Math.floor(diffDays / 7);
+    
+    return Math.max(0, currentWeek);
+  }
+
   // Get all home screen data
   static async getHomeData(req, res) {
     try {
+      const userId = req.dbUser.id;
+      
       // Get current pregnancy data to determine the week
-      const pregnancy = await Pregnancy.getCurrent();
+      const pregnancy = await prisma.pregnancyData.findUnique({
+        where: { userId }
+      });
       
       if (!pregnancy) {
         return res.json({
@@ -22,20 +37,26 @@ class HomeController {
         });
       }
 
-      const currentWeek = pregnancy.getCurrentWeek();
+      const currentWeek = HomeController.calculateCurrentWeek(pregnancy.lastMenstrualPeriod);
       
-      // Get tips for current week
-      const tips = await PregnancyTip.getTipsForWeek(currentWeek);
+      // Get tips for current week from database
+      const tips = await prisma.pregnancyTip.findMany({
+        where: {
+          week: currentWeek
+        }
+      });
       
-      // Get milestones for current week
+      // Get milestones for current week (using static data)
       const currentMilestones = PregnancyMilestone.getMilestonesForWeek(currentWeek);
       const upcomingMilestones = PregnancyMilestone.getUpcomingMilestones(currentWeek, 2);
       
       // Get user profile for personalized checklist
-      const userProfile = await UserProfile.get();
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { userId: req.dbUser.id }
+      });
       
       // Generate dynamic daily checklist
-      const checklist = await DailyChecklist.generateDynamicChecklist(pregnancy, userProfile);
+      const checklist = await DailyChecklist.generateDynamicChecklist(pregnancy, userProfile, new Date());
       const checklistByCategory = HomeController._groupChecklistByCategory(checklist);
       
       res.json({
@@ -43,15 +64,12 @@ class HomeController {
         data: {
           hasPregnancyData: true,
           currentWeek: currentWeek,
-          pregnancy: pregnancy.toJSON(),
-          tips: tips.map(tip => tip.toJSON()),
-          currentMilestones: currentMilestones.map(milestone => milestone.toJSON()),
-          upcomingMilestones: upcomingMilestones.map(milestone => milestone.toJSON()),
-          checklist: checklist.map(task => task.toJSON()),
-          checklistByCategory: Object.keys(checklistByCategory).reduce((acc, category) => {
-            acc[category] = checklistByCategory[category].map(task => task.toJSON());
-            return acc;
-          }, {})
+          pregnancy: pregnancy,
+          tips: tips,
+          currentMilestones: currentMilestones,
+          upcomingMilestones: upcomingMilestones,
+          checklist: checklist,
+          checklistByCategory: checklistByCategory
         }
       });
     } catch (error) {
@@ -76,11 +94,15 @@ class HomeController {
         });
       }
 
-      const tips = await PregnancyTip.getTipsForWeek(weekNum);
+      const tips = await prisma.pregnancyTip.findMany({
+        where: {
+          week: weekNum
+        }
+      });
       
       res.json({
         success: true,
-        data: tips.map(tip => tip.toJSON())
+        data: tips
       });
     } catch (error) {
       console.error('Error getting tips for week:', error);
@@ -163,7 +185,14 @@ class HomeController {
   // Clear expired tips (maintenance endpoint)
   static async clearExpiredTips(req, res) {
     try {
-      await PregnancyTip.clearExpiredTips();
+      const now = new Date();
+      await prisma.pregnancyTip.deleteMany({
+        where: {
+          expiresAt: {
+            lt: now
+          }
+        }
+      });
       
       res.json({
         success: true,
@@ -280,7 +309,9 @@ class HomeController {
       const targetDate = date ? new Date(date) : new Date();
       
       // Get current pregnancy data
-      const pregnancy = await Pregnancy.getCurrent();
+      const pregnancy = await prisma.pregnancyData.findUnique({
+        where: { userId: req.dbUser.id }
+      });
       if (!pregnancy) {
         return res.status(404).json({
           success: false,
@@ -289,7 +320,9 @@ class HomeController {
       }
 
       // Get user profile for personalization
-      const userProfile = await UserProfile.get();
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { userId: req.dbUser.id }
+      });
       
       // Generate dynamic checklist
       const checklist = await DailyChecklist.generateDynamicChecklist(pregnancy, userProfile, targetDate);

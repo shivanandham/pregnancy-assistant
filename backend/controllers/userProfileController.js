@@ -1,10 +1,14 @@
-const UserProfile = require('../models/UserProfile');
+const prisma = require('../lib/prisma');
 
 class UserProfileController {
   // Get user profile
   static async getProfile(req, res) {
     try {
-      const profile = await UserProfile.get();
+      const userId = req.dbUser.id;
+      
+      const profile = await prisma.userProfile.findUnique({
+        where: { userId }
+      });
       
       if (!profile) {
         return res.json({
@@ -16,7 +20,7 @@ class UserProfileController {
 
       res.json({
         success: true,
-        data: profile.toJSON()
+        data: profile
       });
     } catch (error) {
       console.error('Error getting user profile:', error);
@@ -30,6 +34,7 @@ class UserProfileController {
   // Create or update user profile
   static async saveProfile(req, res) {
     try {
+      const userId = req.dbUser.id;
       const {
         height,
         weight,
@@ -53,45 +58,52 @@ class UserProfileController {
       }
 
       // Check if profile exists
-      const existingProfile = await UserProfile.get();
+      const existingProfile = await prisma.userProfile.findUnique({
+        where: { userId }
+      });
       
       let profile;
       if (existingProfile) {
         // Update existing profile
-        profile = await UserProfile.update({
-          height,
-          weight,
-          prePregnancyWeight,
-          age,
-          gender,
-          locality,
-          timezone,
-          medicalHistory,
-          allergies,
-          medications,
-          lifestyle
+        profile = await prisma.userProfile.update({
+          where: { userId },
+          data: {
+            height,
+            weight,
+            prePregnancyWeight,
+            age,
+            gender,
+            locality,
+            timezone,
+            medicalHistory,
+            allergies,
+            medications,
+            lifestyle
+          }
         });
       } else {
         // Create new profile
-        profile = new UserProfile({
-          height,
-          weight,
-          prePregnancyWeight,
-          age,
-          gender,
-          locality,
-          timezone,
-          medicalHistory,
-          allergies,
-          medications,
-          lifestyle
+        profile = await prisma.userProfile.create({
+          data: {
+            userId,
+            height,
+            weight,
+            prePregnancyWeight,
+            age,
+            gender,
+            locality,
+            timezone,
+            medicalHistory,
+            allergies,
+            medications,
+            lifestyle
+          }
         });
-        await profile.save();
       }
 
       res.json({
         success: true,
-        data: profile.toJSON(),
+        data: profile,
         message: existingProfile ? 'Profile updated successfully' : 'Profile created successfully'
       });
     } catch (error) {
@@ -106,6 +118,7 @@ class UserProfileController {
   // Update specific profile fields
   static async updateProfile(req, res) {
     try {
+      const userId = req.dbUser.id;
       const updates = req.body;
       
       if (Object.keys(updates).length === 0) {
@@ -115,11 +128,14 @@ class UserProfileController {
         });
       }
 
-      const profile = await UserProfile.update(updates);
+      const profile = await prisma.userProfile.update({
+        where: { userId },
+        data: updates
+      });
 
       res.json({
         success: true,
-        data: profile.toJSON(),
+        data: profile,
         message: 'Profile updated successfully'
       });
     } catch (error) {
@@ -134,7 +150,10 @@ class UserProfileController {
   // Get profile context for AI
   static async getProfileContext(req, res) {
     try {
-      const profile = await UserProfile.get();
+      const userId = req.dbUser.id;
+      const profile = await prisma.userProfile.findUnique({
+        where: { userId }
+      });
       
       if (!profile) {
         return res.json({
@@ -146,12 +165,25 @@ class UserProfileController {
         });
       }
 
+      // Calculate BMI
+      let bmi = null;
+      if (profile.height && profile.weight) {
+        const heightInMeters = profile.height / 100;
+        bmi = profile.weight / (heightInMeters * heightInMeters);
+      }
+
+      // Calculate weight gain
+      let weightGain = null;
+      if (profile.prePregnancyWeight && profile.weight) {
+        weightGain = profile.weight - profile.prePregnancyWeight;
+      }
+
       const context = {
         hasProfile: true,
-        basicInfo: profile.getFormattedProfile(),
-        medicalContext: profile.getMedicalContext(),
-        bmi: profile.getBMI(),
-        weightGain: profile.getWeightGain()
+        basicInfo: `Age: ${profile.age} years, Height: ${profile.height} cm, Weight: ${profile.weight} kg`,
+        medicalContext: `Medical history: ${JSON.stringify(profile.medicalHistory)}, Allergies: ${JSON.stringify(profile.allergies)}`,
+        bmi: bmi,
+        weightGain: weightGain
       };
 
       res.json({

@@ -18,9 +18,10 @@ class DailyChecklist {
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-      const currentWeek = pregnancy.getCurrentWeek();
+      // Calculate current week from LMP
+      const currentWeek = this.calculateCurrentWeek(pregnancy.lastMenstrualPeriod);
       const trimester = this.getTrimester(currentWeek);
-      const daysRemaining = pregnancy.getDaysUntilDueDate();
+      const daysRemaining = this.calculateDaysUntilDueDate(pregnancy.dueDate);
       
       // Get user context
       const userContext = userProfile ? `
@@ -35,6 +36,9 @@ class DailyChecklist {
         - Activity Level: ${userProfile.activityLevel || 'Not specified'}
       ` : 'No user profile available';
 
+      const safeDueDate = pregnancy.dueDate ? new Date(pregnancy.dueDate) : null;
+      const safeToday = date ? new Date(date) : new Date();
+
       const prompt = `
         You are a pregnancy assistant AI. Generate a personalized daily checklist for a pregnant woman.
 
@@ -42,8 +46,8 @@ class DailyChecklist {
         - Current Week: ${currentWeek}
         - Trimester: ${trimester}
         - Days Remaining: ${daysRemaining}
-        - Due Date: ${pregnancy.dueDate.toDateString()}
-        - Current Date: ${date.toDateString()}
+        - Due Date: ${safeDueDate ? safeDueDate.toDateString() : 'Unknown'}
+        - Current Date: ${safeToday.toDateString()}
 
         ${userContext}
 
@@ -102,7 +106,7 @@ class DailyChecklist {
     } catch (error) {
       console.error('Error generating dynamic checklist:', error);
       // Fallback to static checklist if AI fails
-      return this.getChecklistForWeek(pregnancy.getCurrentWeek());
+      return this.getChecklistForWeek(this.calculateCurrentWeek(pregnancy.lastMenstrualPeriod));
     }
   }
 
@@ -304,6 +308,27 @@ class DailyChecklist {
       personalized: this.personalized,
       generatedAt: this.generatedAt
     };
+  }
+
+  // Helper method to calculate current pregnancy week
+  static calculateCurrentWeek(lastMenstrualPeriod) {
+    if (!lastMenstrualPeriod) return null;
+    
+    const lmp = new Date(lastMenstrualPeriod);
+    const today = new Date();
+    const diffTime = today - lmp;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.floor(diffDays / 7);
+  }
+
+  // Helper method to calculate days until due date
+  static calculateDaysUntilDueDate(dueDate) {
+    if (!dueDate) return null;
+    
+    const due = new Date(dueDate);
+    const today = new Date();
+    const diffTime = due - today;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 }
 

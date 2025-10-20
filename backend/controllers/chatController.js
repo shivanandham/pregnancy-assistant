@@ -1,7 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const ChatMessage = require('../models/ChatMessage');
-const Pregnancy = require('../models/Pregnancy');
-const UserProfile = require('../models/UserProfile');
+const prisma = require('../lib/prisma');
 const fs = require('fs');
 const path = require('path');
 
@@ -15,6 +13,19 @@ class ChatController {
       console.error('Error loading pregnancy guide:', error);
       return '';
     }
+  }
+
+  // Calculate current pregnancy week
+  static calculateCurrentWeek(lastMenstrualPeriod) {
+    if (!lastMenstrualPeriod) return null;
+    
+    const lmp = new Date(lastMenstrualPeriod);
+    const today = new Date();
+    const diffTime = today - lmp;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const currentWeek = Math.floor(diffDays / 7);
+    
+    return Math.max(0, currentWeek);
   }
 
   // Generate a chat title from the first message
@@ -81,6 +92,7 @@ ${ChatController.loadPregnancyGuide()}
   // Send chat message
   static async sendMessage(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { message, context, sessionId } = req.body;
       
       if (!message) {
@@ -92,47 +104,83 @@ ${ChatController.loadPregnancyGuide()}
 
       // Ensure we have a valid session
       let validSessionId = sessionId;
-      const ChatSession = require('../models/ChatSession');
       
       if (validSessionId) {
-        // Verify the session exists
-        const session = await ChatSession.getById(validSessionId);
+        // Verify the session exists and belongs to user
+        const session = await prisma.chatSession.findFirst({
+          where: { 
+            id: validSessionId,
+            userId 
+          }
+        });
         if (!session) {
-          // Session doesn't exist, create a new one
-          const newSession = await ChatSession.createNew();
+          // Session doesn't exist or doesn't belong to user, create a new one
+          const newSession = await prisma.chatSession.create({
+            data: {
+              userId,
+              title: 'New Chat',
+              isActive: true
+            }
+          });
           validSessionId = newSession.id;
         }
       } else {
         // No session provided, get or create active session
-        let activeSession = await ChatSession.getActive();
+        let activeSession = await prisma.chatSession.findFirst({
+          where: { 
+            userId,
+            isActive: true 
+          }
+        });
         if (!activeSession) {
-          activeSession = await ChatSession.createNew();
+          activeSession = await prisma.chatSession.create({
+            data: {
+              userId,
+              title: 'New Chat',
+              isActive: true
+            }
+          });
         }
         validSessionId = activeSession.id;
       }
 
       // Save user message
-      const userMessage = new ChatMessage({
-        content: message,
-        type: 'user',
-        context,
-        sessionId: validSessionId
+      const userMessage = await prisma.chatMessage.create({
+        data: {
+          content: message,
+          type: 'user',
+          context,
+          sessionId: validSessionId
+        }
       });
-      await userMessage.save();
 
       // Update message count for the session (user message)
-      await ChatSession.incrementMessageCount(validSessionId);
+      await prisma.chatSession.update({
+        where: { id: validSessionId },
+        data: {
+          messageCount: {
+            increment: 1
+          }
+        }
+      });
 
       // Auto-generate title for new sessions (if this is the first message)
-      const session = await ChatSession.getById(validSessionId);
+      const session = await prisma.chatSession.findUnique({
+        where: { id: validSessionId }
+      });
       if (session && session.title === 'New Chat') {
         const generatedTitle = ChatController.generateChatTitle(message);
-        await ChatSession.updateTitle(validSessionId, generatedTitle);
+        await prisma.chatSession.update({
+          where: { id: validSessionId },
+          data: { title: generatedTitle }
+        });
       }
 
       // Get current pregnancy data for context
-      const pregnancy = await Pregnancy.getCurrent();
-      const currentWeek = pregnancy ? pregnancy.getCurrentWeek() : null;
+      const pregnancy = await prisma.pregnancyData.findUnique({
+        where: { userId }
+      });
+      const currentWeek = pregnancy ? ChatController.calculateCurrentWeek(pregnancy.lastMenstrualPeriod) : null;
 
       // Retrieve relevant knowledge from previous conversations
       const knowledgeRetriever = require('../services/knowledgeRetriever');
@@ -142,12 +190,16 @@ ${ChatController.loadPregnancyGuide()}
       );
 
       // Get user profile context
-      const userProfile = await UserProfile.get();
+      const userProfile = await prisma.userProfile.findUnique({
+        where: { userId }
+      });
       let profileContext = '';
       if (userProfile) {
+        const basicInfo = `Age: ${userProfile.age} years, Height: ${userProfile.height} cm, Weight: ${userProfile.weight} kg`;
+        const medicalContext = `Medical history: ${JSON.stringify(userProfile.medicalHistory)}, Allergies: ${JSON.stringify(userProfile.allergies)}`;
         profileContext = `\n\nUser Profile Information:
-- Basic Info: ${userProfile.getFormattedProfile()}
-- Medical Context: ${userProfile.getMedicalContext()}`;
+- Basic Info: ${basicInfo}
+- Medical Context: ${medicalContext}`;
       }
 
       // Build context-aware prompt with current time
@@ -223,19 +275,27 @@ ${ChatController.loadPregnancyGuide()}
       // Save AI response (only if not already saved as diagnostic message)
       let assistantMessage;
       if (!diagnosticMessage) {
-        assistantMessage = new ChatMessage({
-          content: aiResponse,
-          type: 'assistant',
-          context: currentWeek ? `Week ${currentWeek}` : null,
-          sessionId: validSessionId
+        assistantMessage = await prisma.chatMessage.create({
+          data: {
+            content: aiResponse,
+            type: 'assistant',
+            context: currentWeek ? `Week ${currentWeek}` : null,
+            sessionId: validSessionId
+          }
         });
-        await assistantMessage.save();
       } else {
         assistantMessage = diagnosticMessage;
       }
 
       // Update message count for the session (assistant message)
-      await ChatSession.incrementMessageCount(validSessionId);
+      await prisma.chatSession.update({
+        where: { id: validSessionId },
+        data: {
+          messageCount: {
+            increment: 1
+          }
+        }
+      });
 
       // Extract and store knowledge asynchronously
       const knowledgeExtractor = require('../services/knowledgeExtractor');

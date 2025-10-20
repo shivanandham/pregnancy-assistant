@@ -1,14 +1,18 @@
-const WeightEntry = require('../models/WeightEntry');
+const prisma = require('../lib/prisma');
 
 class WeightController {
   // Get all weight entries
   static async getAll(req, res) {
     try {
-      const weightEntries = await WeightEntry.getAll();
+      const userId = req.dbUser.id;
+      const weightEntries = await prisma.weightEntry.findMany({
+        where: { userId },
+        orderBy: { dateTime: 'desc' }
+      });
       
       res.json({
         success: true,
-        data: weightEntries.map(entry => entry.toJSON())
+        data: weightEntries
       });
     } catch (error) {
       console.error('Error getting weight entries:', error);
@@ -22,6 +26,7 @@ class WeightController {
   // Get weight entries by date range
   static async getByDateRange(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { startDate, endDate } = req.query;
       
       if (!startDate || !endDate) {
@@ -31,11 +36,20 @@ class WeightController {
         });
       }
 
-      const weightEntries = await WeightEntry.getByDateRange(startDate, endDate);
+      const weightEntries = await prisma.weightEntry.findMany({
+        where: {
+          userId,
+          dateTime: {
+            gte: new Date(startDate),
+            lte: new Date(endDate)
+          }
+        },
+        orderBy: { dateTime: 'desc' }
+      });
       
       res.json({
         success: true,
-        data: weightEntries.map(entry => entry.toJSON())
+        data: weightEntries
       });
     } catch (error) {
       console.error('Error getting weight entries by date range:', error);
@@ -49,8 +63,14 @@ class WeightController {
   // Get weight entry by ID
   static async getById(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
-      const weightEntry = await WeightEntry.getById(id);
+      const weightEntry = await prisma.weightEntry.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
       
       if (!weightEntry) {
         return res.status(404).json({
@@ -61,7 +81,7 @@ class WeightController {
       
       res.json({
         success: true,
-        data: weightEntry.toJSON()
+        data: weightEntry
       });
     } catch (error) {
       console.error('Error getting weight entry:', error);
@@ -75,6 +95,7 @@ class WeightController {
   // Create new weight entry
   static async create(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { weight, dateTime, notes } = req.body;
       
       // Validation
@@ -103,17 +124,18 @@ class WeightController {
         });
       }
 
-      const weightEntry = new WeightEntry({
-        weight: weightNum,
-        dateTime,
-        notes
+      const savedWeightEntry = await prisma.weightEntry.create({
+        data: {
+          userId,
+          weight: weightNum,
+          dateTime: dateObj,
+          notes
+        }
       });
-
-      const savedWeightEntry = await weightEntry.save();
       
       res.status(201).json({
         success: true,
-        data: savedWeightEntry.toJSON(),
+        data: savedWeightEntry,
         message: 'Weight entry created successfully'
       });
     } catch (error) {
@@ -128,8 +150,14 @@ class WeightController {
   // Delete weight entry
   static async delete(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
-      const weightEntry = await WeightEntry.getById(id);
+      const weightEntry = await prisma.weightEntry.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
       
       if (!weightEntry) {
         return res.status(404).json({
@@ -138,7 +166,9 @@ class WeightController {
         });
       }
 
-      await WeightEntry.delete(id);
+      await prisma.weightEntry.delete({
+        where: { id }
+      });
       
       res.json({
         success: true,

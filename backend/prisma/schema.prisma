@@ -7,8 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String   @id @default(uuid())
+  firebaseUid  String   @unique @map("firebase_uid")
+  email        String
+  displayName  String?  @map("display_name")
+  photoURL     String?  @map("photo_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  profile      UserProfile?
+  pregnancyData PregnancyData?
+  symptoms     Symptom[]
+  appointments Appointment[]
+  weightEntries WeightEntry[]
+  chatSessions ChatSession[]
+
+  @@map("users")
+}
+
 model UserProfile {
   id                 String   @id @default(uuid())
+  userId             String   @unique @map("user_id")
   height             Float?
   weight             Float?
   prePregnancyWeight Float?   @map("pre_pregnancy_weight")
@@ -22,17 +43,24 @@ model UserProfile {
   lifestyle          Json?
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
 }
 
 model ChatSession {
   id           String        @id @default(uuid())
+  userId       String        @map("user_id")
   title        String        @default("New Chat")
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
   messageCount Int           @default(0) @map("message_count")
   isActive     Boolean       @default(false) @map("is_active")
+  
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages     ChatMessage[]
 
   @@map("chat_sessions")
@@ -40,30 +68,40 @@ model ChatSession {
 
 model PregnancyData {
   id                  String   @id @default(uuid())
+  userId              String   @unique @map("user_id")
   dueDate             DateTime @map("due_date")
   lastMenstrualPeriod DateTime @map("last_menstrual_period")
   notes               String?
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("pregnancy_data")
 }
 
 model Symptom {
   id         String   @id @default(uuid())
+  userId     String   @map("user_id")
   type       String
   severity   String
   dateTime   DateTime @map("date_time")
   notes      String?
   customType String?  @map("custom_type")
   createdAt  DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([dateTime])
+  @@index([userId])
   @@map("symptoms")
 }
 
 model Appointment {
   id          String   @id @default(uuid())
+  userId      String   @map("user_id")
   title       String
   type        String
   dateTime    DateTime @map("date_time")
@@ -73,19 +111,28 @@ model Appointment {
   isCompleted Boolean  @default(false) @map("is_completed")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([dateTime])
+  @@index([userId])
   @@map("appointments")
 }
 
 model WeightEntry {
   id        String   @id @default(uuid())
+  userId    String   @map("user_id")
   weight    Float
   dateTime  DateTime @default(now()) @map("date_time")
   notes     String?
   createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([dateTime])
+  @@index([userId])
   @@map("weight_entries")
 }
 

@@ -1,11 +1,19 @@
-const ChatSession = require('../models/ChatSession');
-const ChatMessage = require('../models/ChatMessage');
+const prisma = require('../lib/prisma');
 
 class ChatSessionController {
   // Get all chat sessions
   static async getAllSessions(req, res) {
     try {
-      const sessions = await ChatSession.getAll();
+      const userId = req.dbUser.id;
+      const sessions = await prisma.chatSession.findMany({
+        where: { userId },
+        orderBy: { updatedAt: 'desc' },
+        include: {
+          messages: {
+            orderBy: { timestamp: 'asc' }
+          }
+        }
+      });
       res.json({
         success: true,
         data: sessions
@@ -22,7 +30,18 @@ class ChatSessionController {
   // Get active session
   static async getActiveSession(req, res) {
     try {
-      const session = await ChatSession.getActive();
+      const userId = req.dbUser.id;
+      const session = await prisma.chatSession.findFirst({
+        where: { 
+          userId,
+          isActive: true 
+        },
+        include: {
+          messages: {
+            orderBy: { timestamp: 'asc' }
+          }
+        }
+      });
       res.json({
         success: true,
         data: session
@@ -39,8 +58,23 @@ class ChatSessionController {
   // Create new chat session
   static async createSession(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { title } = req.body;
-      const session = await ChatSession.createNew(title);
+      
+      // Deactivate all other sessions for this user
+      await prisma.chatSession.updateMany({
+        where: { userId },
+        data: { isActive: false }
+      });
+      
+      // Create new session
+      const session = await prisma.chatSession.create({
+        data: {
+          userId,
+          title: title || 'New Chat',
+          isActive: true
+        }
+      });
       
       res.json({
         success: true,
@@ -58,8 +92,19 @@ class ChatSessionController {
   // Get session by ID with messages
   static async getSessionById(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
-      const session = await ChatSession.getById(id);
+      const session = await prisma.chatSession.findFirst({
+        where: { 
+          id,
+          userId 
+        },
+        include: {
+          messages: {
+            orderBy: { timestamp: 'asc' }
+          }
+        }
+      });
       
       if (!session) {
         return res.status(404).json({
@@ -67,16 +112,10 @@ class ChatSessionController {
           message: 'Session not found'
         });
       }
-
-      // Get messages for this session
-      const messages = await ChatMessage.getBySessionId(id);
       
       res.json({
         success: true,
-        data: {
-          session,
-          messages
-        }
+        data: session
       });
     } catch (error) {
       console.error('Error getting session:', error);
@@ -90,8 +129,35 @@ class ChatSessionController {
   // Set active session
   static async setActiveSession(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
-      await ChatSession.setActive(id);
+      
+      // Verify session belongs to user
+      const session = await prisma.chatSession.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
+      
+      if (!session) {
+        return res.status(404).json({
+          success: false,
+          message: 'Session not found'
+        });
+      }
+      
+      // Deactivate all other sessions
+      await prisma.chatSession.updateMany({
+        where: { userId },
+        data: { isActive: false }
+      });
+      
+      // Activate this session
+      await prisma.chatSession.update({
+        where: { id },
+        data: { isActive: true }
+      });
       
       res.json({
         success: true,
@@ -109,10 +175,29 @@ class ChatSessionController {
   // Update session title
   static async updateSessionTitle(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
       const { title } = req.body;
       
-      await ChatSession.updateTitle(id, title);
+      // Verify session belongs to user
+      const session = await prisma.chatSession.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
+      
+      if (!session) {
+        return res.status(404).json({
+          success: false,
+          message: 'Session not found'
+        });
+      }
+      
+      await prisma.chatSession.update({
+        where: { id },
+        data: { title }
+      });
       
       res.json({
         success: true,
@@ -130,8 +215,27 @@ class ChatSessionController {
   // Delete session
   static async deleteSession(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
-      await ChatSession.delete(id);
+      
+      // Verify session belongs to user
+      const session = await prisma.chatSession.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
+      
+      if (!session) {
+        return res.status(404).json({
+          success: false,
+          message: 'Session not found'
+        });
+      }
+      
+      await prisma.chatSession.delete({
+        where: { id }
+      });
       
       res.json({
         success: true,

@@ -1,14 +1,18 @@
-const Symptom = require('../models/Symptom');
+const prisma = require('../lib/prisma');
 
 class SymptomController {
   // Get all symptoms
   static async getAll(req, res) {
     try {
-      const symptoms = await Symptom.getAll();
+      const userId = req.dbUser.id;
+      const symptoms = await prisma.symptom.findMany({
+        where: { userId },
+        orderBy: { dateTime: 'desc' }
+      });
       
       res.json({
         success: true,
-        data: symptoms.map(symptom => symptom.toJSON())
+        data: symptoms
       });
     } catch (error) {
       console.error('Error getting symptoms:', error);
@@ -22,6 +26,7 @@ class SymptomController {
   // Get symptoms by date range
   static async getByDateRange(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { startDate, endDate } = req.query;
       
       if (!startDate || !endDate) {
@@ -31,11 +36,20 @@ class SymptomController {
         });
       }
 
-      const symptoms = await Symptom.getByDateRange(startDate, endDate);
+      const symptoms = await prisma.symptom.findMany({
+        where: {
+          userId,
+          dateTime: {
+            gte: new Date(startDate),
+            lte: new Date(endDate)
+          }
+        },
+        orderBy: { dateTime: 'desc' }
+      });
       
       res.json({
         success: true,
-        data: symptoms.map(symptom => symptom.toJSON())
+        data: symptoms
       });
     } catch (error) {
       console.error('Error getting symptoms by date range:', error);
@@ -49,8 +63,14 @@ class SymptomController {
   // Get symptom by ID
   static async getById(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
-      const symptom = await Symptom.getById(id);
+      const symptom = await prisma.symptom.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
       
       if (!symptom) {
         return res.status(404).json({
@@ -61,7 +81,7 @@ class SymptomController {
       
       res.json({
         success: true,
-        data: symptom.toJSON()
+        data: symptom
       });
     } catch (error) {
       console.error('Error getting symptom:', error);
@@ -75,6 +95,7 @@ class SymptomController {
   // Create new symptom
   static async create(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { type, severity, dateTime, notes, customType } = req.body;
       
       // Validation
@@ -94,19 +115,20 @@ class SymptomController {
         });
       }
 
-      const symptom = new Symptom({
-        type,
-        severity,
-        dateTime,
-        notes,
-        customType
+      const savedSymptom = await prisma.symptom.create({
+        data: {
+          userId,
+          type,
+          severity,
+          dateTime: dateObj,
+          notes,
+          customType
+        }
       });
-
-      const savedSymptom = await symptom.save();
       
       res.status(201).json({
         success: true,
-        data: savedSymptom.toJSON(),
+        data: savedSymptom,
         message: 'Symptom created successfully'
       });
     } catch (error) {
@@ -121,8 +143,14 @@ class SymptomController {
   // Delete symptom
   static async delete(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
-      const symptom = await Symptom.getById(id);
+      const symptom = await prisma.symptom.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
       
       if (!symptom) {
         return res.status(404).json({
@@ -131,7 +159,9 @@ class SymptomController {
         });
       }
 
-      await Symptom.delete(id);
+      await prisma.symptom.delete({
+        where: { id }
+      });
       
       res.json({
         success: true,

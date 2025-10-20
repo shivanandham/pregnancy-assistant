@@ -13,6 +13,7 @@ const { validate, schemas } = require('./middleware/validation');
 const Logger = require('./middleware/logger');
 
 // Import routes
+const authRoutes = require('./routes/auth');
 const pregnancyRoutes = require('./routes/pregnancy');
 const symptomRoutes = require('./routes/symptoms');
 const appointmentRoutes = require('./routes/appointments');
@@ -102,6 +103,7 @@ app.get('/health', async (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/pregnancy', pregnancyRoutes);
 app.use('/api/symptoms', symptomRoutes);
 app.use('/api/appointments', appointmentRoutes);

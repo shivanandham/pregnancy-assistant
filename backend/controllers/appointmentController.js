@@ -1,14 +1,18 @@
-const Appointment = require('../models/Appointment');
+const prisma = require('../lib/prisma');
 
 class AppointmentController {
   // Get all appointments
   static async getAll(req, res) {
     try {
-      const appointments = await Appointment.getAll();
+      const userId = req.dbUser.id;
+      const appointments = await prisma.appointment.findMany({
+        where: { userId },
+        orderBy: { dateTime: 'asc' }
+      });
       
       res.json({
         success: true,
-        data: appointments.map(appointment => appointment.toJSON())
+        data: appointments
       });
     } catch (error) {
       console.error('Error getting appointments:', error);
@@ -22,11 +26,21 @@ class AppointmentController {
   // Get upcoming appointments
   static async getUpcoming(req, res) {
     try {
-      const appointments = await Appointment.getUpcoming();
+      const userId = req.dbUser.id;
+      const now = new Date();
+      const appointments = await prisma.appointment.findMany({
+        where: {
+          userId,
+          dateTime: {
+            gte: now
+          }
+        },
+        orderBy: { dateTime: 'asc' }
+      });
       
       res.json({
         success: true,
-        data: appointments.map(appointment => appointment.toJSON())
+        data: appointments
       });
     } catch (error) {
       console.error('Error getting upcoming appointments:', error);
@@ -40,8 +54,14 @@ class AppointmentController {
   // Get appointment by ID
   static async getById(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
-      const appointment = await Appointment.getById(id);
+      const appointment = await prisma.appointment.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
       
       if (!appointment) {
         return res.status(404).json({
@@ -52,7 +72,7 @@ class AppointmentController {
       
       res.json({
         success: true,
-        data: appointment.toJSON()
+        data: appointment
       });
     } catch (error) {
       console.error('Error getting appointment:', error);
@@ -66,6 +86,7 @@ class AppointmentController {
   // Create new appointment
   static async create(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { title, type, dateTime, location, doctor, notes } = req.body;
       
       // Validation
@@ -85,20 +106,21 @@ class AppointmentController {
         });
       }
 
-      const appointment = new Appointment({
-        title,
-        type,
-        dateTime,
-        location,
-        doctor,
-        notes
+      const savedAppointment = await prisma.appointment.create({
+        data: {
+          userId,
+          title,
+          type,
+          dateTime: dateObj,
+          location,
+          doctor,
+          notes
+        }
       });
-
-      const savedAppointment = await appointment.save();
       
       res.status(201).json({
         success: true,
-        data: savedAppointment.toJSON(),
+        data: savedAppointment,
         message: 'Appointment created successfully'
       });
     } catch (error) {
@@ -113,10 +135,16 @@ class AppointmentController {
   // Update appointment
   static async update(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
       const { title, type, dateTime, location, doctor, notes, isCompleted } = req.body;
       
-      const existingAppointment = await Appointment.getById(id);
+      const existingAppointment = await prisma.appointment.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
       
       if (!existingAppointment) {
         return res.status(404).json({
@@ -136,24 +164,23 @@ class AppointmentController {
         }
       }
 
-      const appointment = new Appointment({
-        id: existingAppointment.id,
-        title: title || existingAppointment.title,
-        type: type || existingAppointment.type,
-        dateTime: dateTime || existingAppointment.dateTime,
-        location: location !== undefined ? location : existingAppointment.location,
-        doctor: doctor !== undefined ? doctor : existingAppointment.doctor,
-        notes: notes !== undefined ? notes : existingAppointment.notes,
-        isCompleted: isCompleted !== undefined ? isCompleted : existingAppointment.isCompleted,
-        createdAt: existingAppointment.createdAt,
-        updatedAt: new Date().toISOString()
-      });
+      const updateData = {};
+      if (title !== undefined) updateData.title = title;
+      if (type !== undefined) updateData.type = type;
+      if (dateTime !== undefined) updateData.dateTime = new Date(dateTime);
+      if (location !== undefined) updateData.location = location;
+      if (doctor !== undefined) updateData.doctor = doctor;
+      if (notes !== undefined) updateData.notes = notes;
+      if (isCompleted !== undefined) updateData.isCompleted = isCompleted;
 
-      const savedAppointment = await appointment.save();
+      const savedAppointment = await prisma.appointment.update({
+        where: { id },
+        data: updateData
+      });
       
       res.json({
         success: true,
-        data: savedAppointment.toJSON(),
+        data: savedAppointment,
         message: 'Appointment updated successfully'
       });
     } catch (error) {
@@ -168,8 +195,14 @@ class AppointmentController {
   // Delete appointment
   static async delete(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { id } = req.params;
-      const appointment = await Appointment.getById(id);
+      const appointment = await prisma.appointment.findFirst({
+        where: { 
+          id,
+          userId 
+        }
+      });
       
       if (!appointment) {
         return res.status(404).json({
@@ -178,7 +211,9 @@ class AppointmentController {
         });
       }
 
-      await Appointment.delete(id);
+      await prisma.appointment.delete({
+        where: { id }
+      });
       
       res.json({
         success: true,

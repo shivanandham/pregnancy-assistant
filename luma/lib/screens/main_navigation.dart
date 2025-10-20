@@ -42,7 +42,10 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    // Defer data loading until after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
   }
 
   void _setupProviderCallbacks() {

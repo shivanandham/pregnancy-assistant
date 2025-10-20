@@ -33,7 +33,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<UserProfileProvider>().loadUserProfile();
+    // Defer data loading until after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UserProfileProvider>().loadUserProfile();
+    });
   }
 
   @override

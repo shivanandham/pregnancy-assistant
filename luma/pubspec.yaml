@@ -54,6 +54,11 @@ dependencies:
   # Utilities
   uuid: ^4.3.3
   
+  # Authentication
+  google_sign_in: ^6.2.1
+  firebase_auth: ^5.3.1
+  firebase_core: ^3.6.0
+  
   # Update functionality
   package_info_plus: ^8.0.0
   url_launcher: ^6.3.0

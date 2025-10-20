@@ -1,0 +1,595 @@
+{
+  "info": {
+    "name": "Luma Pregnancy Assistant - Multi-User API",
+    "description": "Complete API testing collection for multi-user pregnancy assistant backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Sync User (Create/Update)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"{{user_id}}\",\n  \"email\": \"test@example.com\",\n  \"displayName\": \"Test User\",\n  \"photoURL\": \"https://example.com/photo.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/sync",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "sync"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pregnancy Data",
+      "item": [
+        {
+          "name": "Get Current Pregnancy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pregnancy",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pregnancy"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create/Update Pregnancy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dueDate\": \"2024-08-15T00:00:00.000Z\",\n  \"lastMenstrualPeriod\": \"2023-11-08T00:00:00.000Z\",\n  \"notes\": \"First pregnancy, very excited!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pregnancy",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pregnancy"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Pregnancy Data",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pregnancy",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pregnancy"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user-profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user-profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create/Update Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"height\": 165,\n  \"weight\": 65,\n  \"prePregnancyWeight\": 60,\n  \"age\": 28,\n  \"gender\": \"female\",\n  \"locality\": \"New York\",\n  \"timezone\": \"America/New_York\",\n  \"medicalHistory\": [\"No significant medical history\"],\n  \"allergies\": [\"None known\"],\n  \"medications\": [\"Prenatal vitamins\"],\n  \"lifestyle\": {\n    \"exercise\": \"Light walking\",\n    \"diet\": \"Balanced diet\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user-profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user-profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile Fields",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weight\": 66,\n  \"notes\": \"Updated weight after doctor visit\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user-profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user-profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Symptoms",
+      "item": [
+        {
+          "name": "Get All Symptoms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/symptoms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "symptoms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Symptoms by Date Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/symptoms/range?startDate=2024-01-01&endDate=2024-01-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "symptoms", "range"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-01-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Symptom",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"nausea\",\n  \"severity\": \"3\",\n  \"dateTime\": \"2024-01-15T10:30:00.000Z\",\n  \"notes\": \"Morning sickness, felt better after eating\",\n  \"customType\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/symptoms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "symptoms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Symptom by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/symptoms/{{symptom_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "symptoms", "{{symptom_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Symptom",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/symptoms/{{symptom_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "symptoms", "{{symptom_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Weight Tracking",
+      "item": [
+        {
+          "name": "Get All Weight Entries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/weight",
+              "host": ["{{base_url}}"],
+              "path": ["api", "weight"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Weight Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weight\": 66.5,\n  \"dateTime\": \"2024-01-15T08:00:00.000Z\",\n  \"notes\": \"Weekly weigh-in at doctor's office\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/weight",
+              "host": ["{{base_url}}"],
+              "path": ["api", "weight"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Upcoming Appointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments/upcoming",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "upcoming"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Prenatal Checkup\",\n  \"type\": \"routine\",\n  \"dateTime\": \"2024-02-15T14:00:00.000Z\",\n  \"location\": \"Dr. Smith's Office\",\n  \"doctor\": \"Dr. Jane Smith\",\n  \"notes\": \"Regular checkup, bring ultrasound results\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat Sessions",
+      "item": [
+        {
+          "name": "Get All Chat Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chat-sessions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat-sessions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chat-sessions/active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat-sessions", "active"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create New Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Questions about nutrition\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat-sessions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat-sessions"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat Messages",
+      "item": [
+        {
+          "name": "Send Chat Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What foods should I avoid during pregnancy?\",\n  \"context\": \"I'm in my second trimester and want to make sure I'm eating right\",\n  \"sessionId\": \"{{session_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chat/history",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "history"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Server Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

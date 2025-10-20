@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "607143667861",
+    "project_id": "luma-pregnancy-assistant",
+    "storage_bucket": "luma-pregnancy-assistant.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607143667861:android:2c95474d84e8182ce3d39c",
+        "android_client_info": {
+          "package_name": "com.luma.luma"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "607143667861-3prekfas01h017dbsmc1v11str6g1mjo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.luma.luma",
+            "certificate_hash": "7ac4a158a0d937dde9f9ac3a37ecc22884b9b392"
+          }
+        },
+        {
+          "client_id": "607143667861-9j0e1tf0vj3qjb6v65rltr9i7qd1vuk5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJCJfGvIQSC6nNi5cSZxbIbqYW7oRm45c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "607143667861-9j0e1tf0vj3qjb6v65rltr9i7qd1vuk5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

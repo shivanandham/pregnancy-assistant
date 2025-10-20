@@ -6,7 +6,7 @@ class ApiConfig {
     // Check if we're in debug mode (development)
     if (kDebugMode) {
       // For development, use your computer's IP address (Android emulator can't reach localhost)
-      return 'http://192.168.0.8:3000';
+      return 'http://192.168.0.9:3000';
     } else {
       // For production, use the deployed URL
       return 'https://pregnancy-assistant-production.up.railway.app';

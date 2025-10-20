@@ -1,10 +1,14 @@
-const Pregnancy = require('../models/Pregnancy');
+const prisma = require('../lib/prisma');
 
 class PregnancyController {
   // Get current pregnancy data
   static async getCurrent(req, res) {
     try {
-      const pregnancy = await Pregnancy.getCurrent();
+      const userId = req.dbUser.id;
+      
+      const pregnancy = await prisma.pregnancyData.findUnique({
+        where: { userId }
+      });
       
       if (!pregnancy) {
         return res.status(404).json({
@@ -15,7 +19,7 @@ class PregnancyController {
       
       res.json({
         success: true,
-        data: pregnancy.toJSON()
+        data: pregnancy
       });
     } catch (error) {
       console.error('Error getting pregnancy data:', error);
@@ -29,6 +33,7 @@ class PregnancyController {
   // Create or update pregnancy data
   static async createOrUpdate(req, res) {
     try {
+      const userId = req.dbUser.id;
       const { dueDate, lastMenstrualPeriod, notes } = req.body;
       
       // Validation
@@ -58,33 +63,36 @@ class PregnancyController {
       }
 
       // Check if pregnancy data already exists
-      const existingPregnancy = await Pregnancy.getCurrent();
+      const existingPregnancy = await prisma.pregnancyData.findUnique({
+        where: { userId }
+      });
       
       let pregnancy;
       if (existingPregnancy) {
         // Update existing
-        pregnancy = new Pregnancy({
-          id: existingPregnancy.id,
-          dueDate,
-          lastMenstrualPeriod,
-          notes,
-          createdAt: existingPregnancy.createdAt,
-          updatedAt: new Date().toISOString()
+        pregnancy = await prisma.pregnancyData.update({
+          where: { userId },
+          data: {
+            dueDate: dueDateObj,
+            lastMenstrualPeriod: lmpObj,
+            notes
+          }
         });
       } else {
         // Create new
-        pregnancy = new Pregnancy({
-          dueDate,
-          lastMenstrualPeriod,
-          notes
+        pregnancy = await prisma.pregnancyData.create({
+          data: {
+            userId,
+            dueDate: dueDateObj,
+            lastMenstrualPeriod: lmpObj,
+            notes
+          }
         });
       }
-
-      const savedPregnancy = await pregnancy.save();
       
       res.json({
         success: true,
-        data: savedPregnancy.toJSON(),
+        data: pregnancy,
         message: existingPregnancy ? 'Pregnancy data updated' : 'Pregnancy data created'
       });
     } catch (error) {
@@ -99,7 +107,11 @@ class PregnancyController {
   // Delete pregnancy data
   static async delete(req, res) {
     try {
-      const pregnancy = await Pregnancy.getCurrent();
+      const userId = req.dbUser.id;
+      
+      const pregnancy = await prisma.pregnancyData.findUnique({
+        where: { userId }
+      });
       
       if (!pregnancy) {
         return res.status(404).json({
@@ -108,7 +120,9 @@ class PregnancyController {
         });
       }
 
-      await Pregnancy.delete(pregnancy.id);
+      await prisma.pregnancyData.delete({
+        where: { userId }
+      });
       
       res.json({
         success: true,
