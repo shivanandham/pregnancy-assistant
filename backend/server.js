@@ -23,6 +23,9 @@ const chatSessionRoutes = require('./routes/chatSessions');
 const knowledgeRoutes = require('./routes/knowledge');
 const userProfileRoutes = require('./routes/userProfile');
 const releaseRoutes = require('./routes/releases');
+const tipsRoutes = require('./routes/tips');
+const milestonesRoutes = require('./routes/milestones');
+const checklistRoutes = require('./routes/checklist');
 
 // Import services
 const CronService = require('./services/cronService');
@@ -113,6 +116,9 @@ app.use('/api/chat-sessions', chatSessionRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/home', require('./routes/home'));
+app.use('/api/tips', tipsRoutes);
+app.use('/api/milestones', milestonesRoutes);
+app.use('/api/checklist', checklistRoutes);
 app.use('/api/releases', releaseRoutes);
 
 // Legacy chat endpoint for backward compatibility

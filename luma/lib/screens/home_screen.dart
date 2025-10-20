@@ -9,6 +9,7 @@ import '../models/daily_checklist.dart';
 import '../models/pregnancy.dart';
 import '../services/device_timezone_service.dart';
 import '../services/api_service.dart';
+import '../widgets/skeleton_loader.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   DateTime? _dueDate;
   int _cycleLength = 28; // Default 28-day cycle
   bool _isSubmitting = false;
+  
 
   @override
   void initState() {
@@ -54,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _dueDateController.dispose();
     super.dispose();
   }
+
 
   void _startTipCarousel() {
     Future.delayed(const Duration(seconds: 5), () {
@@ -227,13 +230,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       body: Consumer2<PregnancyProvider, HomeProvider>(
         builder: (context, pregnancyProvider, homeProvider, child) {
-          if (homeProvider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+          // Show pregnancy setup form only after base home data has loaded
+          if (homeProvider.homeData != null && !homeProvider.hasPregnancyData && !homeProvider.isLoading) {
+            return _buildPregnancySetupForm(pregnancyProvider);
           }
 
-          if (homeProvider.error != null) {
+          // Show error for basic home data loading only if we have an error and no pregnancy data
+          if (homeProvider.homeData != null && homeProvider.error != null && !homeProvider.hasPregnancyData) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -266,10 +269,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             );
           }
 
-          if (!homeProvider.hasPregnancyData) {
-            return _buildPregnancySetupForm(pregnancyProvider);
-          }
-
           return SafeArea(
             child: RefreshIndicator(
               onRefresh: () async {
@@ -297,23 +296,72 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: Container(
-                    height: 200,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: _buildTodayFocusCarousel(homeProvider.tips),
+                  child: homeProvider.isLoadingTips
+                      ? const TipsSkeletonLoader()
+                      : homeProvider.tipsError != null
+                          ? Container(
+                              height: 200,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.error_outline, color: Colors.red[300]),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Failed to load tips',
+                                      style: TextStyle(color: Colors.red[300]),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => homeProvider.refreshTips(),
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : Container(
+                              height: 200,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: _buildTodayFocusCarousel(homeProvider.tips),
+                            ),
+                ),
+                // Milestones section with individual loading state
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: _buildSectionHeader('This Week', Icons.calendar_view_week),
                   ),
                 ),
-                if (homeProvider.currentMilestones.isNotEmpty) ...[
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      child: _buildSectionHeader('This Week', Icons.calendar_view_week),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: _buildWeekMilestones(homeProvider.currentMilestones),
-                  ),
-                ],
+                SliverToBoxAdapter(
+                  child: homeProvider.isLoadingMilestones
+                      ? const MilestonesSkeletonLoader()
+                      : homeProvider.milestonesError != null
+                          ? Container(
+                              height: 120,
+                              margin: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.error_outline, color: Colors.red[300]),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Failed to load milestones',
+                                      style: TextStyle(color: Colors.red[300]),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => homeProvider.refreshMilestones(),
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : homeProvider.currentMilestones.isNotEmpty
+                              ? _buildWeekMilestones(homeProvider.currentMilestones)
+                              : const SizedBox.shrink(),
+                ),
                 const SliverToBoxAdapter(
                   child: SizedBox(height: 20),
                 ),
@@ -324,7 +372,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _buildChecklistGrid(homeProvider.checklistByCategory),
+                  child: homeProvider.isLoadingChecklist
+                      ? const ChecklistSkeletonLoader()
+                      : homeProvider.checklistError != null
+                          ? Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Center(
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.error_outline, color: Colors.red[300]),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Failed to load checklist',
+                                      style: TextStyle(color: Colors.red[300]),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => homeProvider.refreshChecklist(),
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : _buildChecklistGrid(homeProvider.checklistByCategory),
                 ),
                 const SliverToBoxAdapter(
                   child: SizedBox(height: 100),
