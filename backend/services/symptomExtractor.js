@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Symptom = require('../models/Symptom');
 
 class SymptomExtractor {
-  static async extractAndCreateSymptoms(userMessage, aiResponse, currentWeek) {
+  static async extractAndCreateSymptoms(userMessage, aiResponse, currentWeek, userId) {
     try {
       // Check if API key is available
       if (!process.env.GEMINI_API_KEY) {
@@ -91,6 +91,7 @@ Only extract symptoms that are explicitly mentioned by the user. If no symptoms 
             }
             
             const symptom = new Symptom({
+              userId: userId,
               type: symptomType,
               severity: severity,
               dateTime: now,

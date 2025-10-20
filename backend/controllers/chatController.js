@@ -2,6 +2,9 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const prisma = require('../lib/prisma');
 const fs = require('fs');
 const path = require('path');
+const ChatMessage = require('../models/ChatMessage');
+const ChatSession = require('../models/ChatSession');
+const Pregnancy = require('../models/Pregnancy');
 
 class ChatController {
   // Load pregnancy do's and don'ts guide
@@ -44,6 +47,11 @@ class ChatController {
       }
     }
     
+    // If title is empty after removing greetings, use the original message
+    if (title.length === 0) {
+      title = message.trim();
+    }
+    
     // Capitalize first letter
     if (title.length > 0) {
       title = title.charAt(0).toUpperCase() + title.slice(1);
@@ -54,8 +62,8 @@ class ChatController {
       title = title.substring(0, 47) + '...';
     }
     
-    // If title is empty or too short, use a default
-    if (title.length < 3) {
+    // If title is still empty or too short, use a default
+    if (title.length < 2) {
       title = 'New Chat';
     }
     
@@ -170,6 +178,7 @@ ${ChatController.loadPregnancyGuide()}
       });
       if (session && session.title === 'New Chat') {
         const generatedTitle = ChatController.generateChatTitle(message);
+        console.log(`Updating session title from "${session.title}" to "${generatedTitle}"`);
         await prisma.chatSession.update({
           where: { id: validSessionId },
           data: { title: generatedTitle }
@@ -304,7 +313,7 @@ ${ChatController.loadPregnancyGuide()}
 
       // Extract and create symptoms asynchronously
       const symptomExtractor = require('../services/symptomExtractor');
-      symptomExtractor.extractAndCreateSymptoms(message, aiResponse, currentWeek)
+      symptomExtractor.extractAndCreateSymptoms(message, aiResponse, currentWeek, userId)
         .then(symptoms => {
           if (symptoms.length > 0) {
             console.log(`Created ${symptoms.length} symptoms from chat conversation`);
@@ -315,8 +324,8 @@ ${ChatController.loadPregnancyGuide()}
       res.json({
         success: true,
         data: {
-          userMessage: userMessage.toJSON(),
-          assistantMessage: assistantMessage.toJSON()
+          userMessage: userMessage,
+          assistantMessage: assistantMessage.toJSON ? assistantMessage.toJSON() : assistantMessage
         }
       });
 
@@ -326,7 +335,6 @@ ${ChatController.loadPregnancyGuide()}
       // Try to get a valid session for error message
       let errorSessionId = null;
       try {
-        const ChatSession = require('../models/ChatSession');
         let activeSession = await ChatSession.getActive();
         if (!activeSession) {
           activeSession = await ChatSession.createNew();
