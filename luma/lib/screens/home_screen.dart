@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/pregnancy_provider.dart';
 import '../providers/home_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/pregnancy_tip.dart';
 import '../models/pregnancy_milestone.dart';
 import '../models/daily_checklist.dart';
@@ -1460,6 +1461,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         title: const Text('Welcome to Luma'),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _showLogoutDialog(),
+            tooltip: 'Logout',
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -1769,5 +1777,58 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return months[month - 1];
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout? You will need to sign in again to access your pregnancy data.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _performLogout();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.errorColor,
+              ),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _performLogout() async {
+    try {
+      final authProvider = context.read<AuthProvider>();
+      await authProvider.signOut();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Logged out successfully'),
+            backgroundColor: AppTheme.accentColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
   }
 }

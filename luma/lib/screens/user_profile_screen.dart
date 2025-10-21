@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_profile_provider.dart';
+import '../providers/auth_provider.dart';
 import '../models/user_profile.dart';
 import '../theme/app_theme.dart';
 
@@ -83,6 +84,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               }
               return const SizedBox.shrink();
             },
+          ),
+          // Logout button
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _showLogoutDialog(),
+            tooltip: 'Logout',
           ),
         ],
       ),
@@ -1021,6 +1028,59 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           backgroundColor: AppTheme.accentColor,
         ),
       );
+    }
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout? You will need to sign in again to access your pregnancy data.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _performLogout();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.errorColor,
+              ),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _performLogout() async {
+    try {
+      final authProvider = context.read<AuthProvider>();
+      await authProvider.signOut();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Logged out successfully'),
+            backgroundColor: AppTheme.accentColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logout failed: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
     }
   }
 }
