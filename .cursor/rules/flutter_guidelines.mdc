@@ -5,9 +5,10 @@ alwaysApply: false
 # Flutter App Development Guidelines
 
 ## App Structure
-- State management: 6 providers (PregnancyProvider, ChatProvider, ChatSessionProvider, TrackerProvider, UserProfileProvider, HomeProvider)
-- Key screens: HomeScreen (dashboard), ChatbotScreen, TrackerScreen, CalendarScreen, UserProfileScreen
+- State management: 7 providers (PregnancyProvider, ChatProvider, ChatSessionProvider, TrackerProvider, UserProfileProvider, HomeProvider, AuthProvider)
+- Key screens: HomeScreen (dashboard), ChatbotScreen, TrackerScreen, CalendarScreen, UserProfileScreen, LoginScreen
 - UI: Material Design 3 with pregnancy-themed color palette, responsive design
+- Authentication: Firebase Auth with Google Sign-In integration
 
 ## Common Commands
 - Flutter: `flutter pub get`, `flutter run`, `flutter build apk`
@@ -30,3 +31,17 @@ alwaysApply: false
 - Visual progress indicators with trimester-specific colors
 - Context-aware AI responses based on current pregnancy week
 - Health tracking with appropriate medical disclaimers
+
+## Authentication & User Management
+- Firebase Auth integration with Google Sign-In
+- User session management with automatic token refresh
+- Logout functionality with confirmation dialogs
+- User profile synchronization with backend
+- Multi-user support with user-specific data isolation
+
+## Error Handling & User Experience
+- Comprehensive error handling with user-friendly messages
+- Loading states and skeleton loaders for better UX
+- Optimistic UI updates with rollback on API failures
+- Retry mechanisms for failed API calls
+- Graceful degradation when services are unavailable

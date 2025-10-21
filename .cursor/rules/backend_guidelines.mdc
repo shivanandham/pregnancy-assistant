@@ -20,9 +20,10 @@ alwaysApply: false
 
 ## Environment Configuration
 - Development: http://192.168.0.8:3000 (local network)
-- Production: https://pregnancy-assistant-production.up.railway.app
-- Database: Supabase PostgreSQL with connection pooling
+- Production: Self-hosted PostgreSQL on DigitalOcean
+- Database: Local PostgreSQL (dev) / Self-hosted PostgreSQL (prod)
 - AI: Google Gemini API key required
+- Authentication: Firebase Auth with Google Sign-In
 
 ## Common Commands
 - Backend: `npm run dev` (development), `npm run deploy:db` (database)
@@ -33,3 +34,17 @@ alwaysApply: false
 - Use pregnancy-specific context with current week information
 - Implement diagnostic questioning for symptom assessment
 - Extract and store knowledge from conversations for future reference
+
+## Authentication & Security
+- Firebase Auth with Google Sign-In for user authentication
+- JWT token validation for API endpoints
+- User session management with automatic token refresh
+- Secure user data synchronization between Firebase and backend
+- Multi-user support with user-specific data isolation
+
+## Database Configuration
+- Development: Local PostgreSQL with Prisma migrations
+- Production: Self-hosted PostgreSQL on DigitalOcean
+- Database URL configuration via environment variables
+- Automatic database URL selection based on NODE_ENV
+- Connection pooling and graceful shutdown handling

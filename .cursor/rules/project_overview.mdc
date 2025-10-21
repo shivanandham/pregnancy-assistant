@@ -11,10 +11,11 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 ## Architecture Overview
 - **Frontend**: Flutter (Dart) cross-platform mobile app with Provider state management
 - **Backend**: Node.js/Express REST API with Prisma ORM for database operations
-- **Database**: PostgreSQL (Supabase for production, local for development)
+- **Database**: PostgreSQL (self-hosted for production, local for development)
 - **AI Integration**: Google Gemini 2.5 Flash for intelligent pregnancy assistance
-- **Deployment**: Railway (backend hosting) + Supabase (database hosting)
-- **State Management**: Provider pattern with 6 main providers
+- **Authentication**: Firebase Auth with Google Sign-In
+- **Deployment**: Self-hosted on DigitalOcean with PM2 process management
+- **State Management**: Provider pattern with 7 main providers (including AuthProvider)
 - **UI Framework**: Material Design 3 with pregnancy-themed color palette
 
 ## Core Features & Capabilities
@@ -47,6 +48,8 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Timezone support** for accurate time tracking and reminders
 - **Preference storage** for customized recommendations
 - **Medical history tracking** for context-aware AI responses
+- **User authentication** with Firebase Auth and Google Sign-In
+- **Secure logout functionality** with confirmation dialogs
 
 ### 5. Knowledge Management System
 - **Pregnancy tips database** categorized by week, trimester, and topic
@@ -58,6 +61,7 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 ## Technical Architecture Details
 
 ### Database Schema (Prisma)
+- **User**: Firebase user integration with authentication data
 - **UserProfile**: Demographics, medical history, preferences, timezone
 - **PregnancyData**: Due date, LMP, cycle length, pregnancy timeline
 - **ChatSession/ChatMessage**: AI conversation management with diagnostic support
@@ -76,6 +80,8 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Joi validation** for input sanitization and error handling
 - **Rate limiting** with different limits for chat vs. general API
 - **CORS configuration** with environment-specific origins
+- **Firebase Auth middleware** for JWT token validation
+- **User-specific data isolation** with authentication context
 
 ### AI Integration Architecture
 - **Google Gemini 2.5 Flash** for natural language processing
@@ -112,8 +118,9 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 ## Security & Privacy Framework
 
 ### Data Protection
-- **No authentication system** (single-user per device assumption)
-- **Local data storage** with cloud synchronization
+- **Firebase Authentication** with Google Sign-In for secure user access
+- **JWT token validation** for all API endpoints
+- **User-specific data isolation** with authentication context
 - **Backend-only API key access** for AI services
 - **Input validation** with comprehensive sanitization
 - **Rate limiting** to prevent abuse and ensure service availability
@@ -126,11 +133,12 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Emergency situation recognition** with immediate medical advice
 
 ### Privacy Considerations
-- **Single-user design** eliminates multi-user privacy concerns
-- **Local-first approach** with optional cloud sync
+- **Multi-user support** with secure user data isolation
+- **Firebase Auth integration** for secure authentication
+- **User-specific data storage** with proper access controls
 - **No personal data sharing** with third parties
 - **Medical information protection** with appropriate handling
-- **Conversation privacy** with local storage options
+- **Conversation privacy** with user-specific storage
 
 ## Environment & Configuration
 
@@ -138,14 +146,16 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Local development**: http://192.168.0.8:3000 (local network access)
 - **Database**: Local PostgreSQL with Prisma migrations
 - **AI**: Google Gemini API with development key
+- **Authentication**: Firebase Auth with development configuration
 - **Hot reload**: Nodemon for backend, Flutter hot reload for frontend
 
 ### Production Environment
-- **Backend hosting**: Railway with automatic deployments
-- **Database**: Supabase PostgreSQL with connection pooling
-- **API endpoint**: https://pregnancy-assistant-production.up.railway.app
+- **Backend hosting**: Self-hosted on DigitalOcean with PM2 process management
+- **Database**: Self-hosted PostgreSQL on DigitalOcean
+- **API endpoint**: Custom domain with SSL certificate
 - **AI**: Google Gemini API with production key
-- **Monitoring**: Health checks and error tracking
+- **Authentication**: Firebase Auth with production configuration
+- **Monitoring**: PM2 process monitoring and health checks
 
 ### Common Development Commands
 - **Backend**: `npm run dev` (development), `npm run deploy:db` (database deployment)
@@ -183,6 +193,8 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Caching strategies** for frequently accessed data
 - **Offline capability** with local storage and sync
 - **Memory management** for long-running app sessions
+- **Authentication state management** with automatic token refresh
+- **Error handling** with user-friendly messages and retry mechanisms
 
 ### Backend Performance
 - **Database indexing** on frequently queried fields
@@ -190,6 +202,8 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Rate limiting** to prevent abuse and ensure availability
 - **Error handling** with graceful degradation
 - **Monitoring** with health checks and performance metrics
+- **User-specific data queries** with authentication context
+- **PM2 process management** for production stability
 
 ### AI Service Optimization
 - **Context optimization** for efficient prompt engineering
