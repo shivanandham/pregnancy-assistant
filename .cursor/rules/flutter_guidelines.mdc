@@ -8,7 +8,7 @@ alwaysApply: false
 - State management: 7 providers (PregnancyProvider, ChatProvider, ChatSessionProvider, TrackerProvider, UserProfileProvider, HomeProvider, AuthProvider)
 - Key screens: HomeScreen (dashboard), ChatbotScreen, TrackerScreen, CalendarScreen, UserProfileScreen, LoginScreen
 - UI: Material Design 3 with pregnancy-themed color palette, responsive design
-- Authentication: Firebase Auth with Google Sign-In integration
+- Authentication: Custom session token system with Firebase Auth for identity verification
 
 ## Common Commands
 - Flutter: `flutter pub get`, `flutter run`, `flutter build apk`
@@ -33,14 +33,25 @@ alwaysApply: false
 - Health tracking with appropriate medical disclaimers
 
 ## Authentication & User Management
-- Firebase Auth integration with Google Sign-In
-- User session management with automatic token refresh
+- **Custom Session Token System**: Uses custom JWT session tokens (not Firebase tokens) for API authentication
+- **Firebase Auth**: Used only for initial Google Sign-In and identity verification
+- **Session Token Storage**: Session and refresh tokens stored in SharedPreferences
+- **AuthenticatedHttpClient**: Custom HTTP client that automatically adds session tokens to all API requests
+- **Automatic Token Refresh**: Reactive token refresh on expiration or 401 errors
+- **401 Error Handling**: Automatic logout on session revocation or expiration
+- **Session Management**: Calls `/api/auth/login` after Firebase sign-in to obtain session tokens
+- **Logout Flow**: Backend logout endpoint called before clearing local tokens and Firebase sign-out
+- **Token Expiration**: Checks token expiration before making API calls
+- **Race Condition Prevention**: Uses `_isLoggingOut` flag and `Completer` to prevent concurrent login/logout
 - Logout functionality with confirmation dialogs
 - User profile synchronization with backend
 - Multi-user support with user-specific data isolation
 
 ## Error Handling & User Experience
 - Comprehensive error handling with user-friendly messages
+- **401 Unauthorized Handling**: Automatic token refresh on 401 errors
+- **Session Revocation Detection**: Immediate logout when session is revoked or expired
+- **API Call Retry**: Automatic retry after successful token refresh
 - Loading states and skeleton loaders for better UX
 - Optimistic UI updates with rollback on API failures
 - Retry mechanisms for failed API calls

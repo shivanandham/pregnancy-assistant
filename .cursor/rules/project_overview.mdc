@@ -13,7 +13,7 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Backend**: Node.js/Express REST API with Prisma ORM for database operations
 - **Database**: PostgreSQL (self-hosted for production, local for development)
 - **AI Integration**: Google Gemini 2.5 Flash for intelligent pregnancy assistance
-- **Authentication**: Firebase Auth with Google Sign-In
+- **Authentication**: Custom session token system with Firebase Auth for identity verification
 - **Deployment**: Self-hosted on DigitalOcean with PM2 process management
 - **State Management**: Provider pattern with 7 main providers (including AuthProvider)
 - **UI Framework**: Material Design 3 with pregnancy-themed color palette
@@ -62,6 +62,7 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 
 ### Database Schema (Prisma)
 - **User**: Firebase user integration with authentication data
+- **Session**: Custom session token management (JWT tokens, refresh tokens, expiration, revocation)
 - **UserProfile**: Demographics, medical history, preferences, timezone
 - **PregnancyData**: Due date, LMP, cycle length, pregnancy timeline
 - **ChatSession/ChatMessage**: AI conversation management with diagnostic support
@@ -80,7 +81,9 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Joi validation** for input sanitization and error handling
 - **Rate limiting** with different limits for chat vs. general API
 - **CORS configuration** with environment-specific origins
-- **Firebase Auth middleware** for JWT token validation
+- **Custom Session Token Middleware**: Validates JWT session tokens (not Firebase tokens)
+- **Session Service**: Token generation, verification, refresh, and revocation
+- **Auth Endpoints**: `/api/auth/login`, `/api/auth/refresh`, `/api/auth/logout`, `/api/auth/logout-all`
 - **User-specific data isolation** with authentication context
 
 ### AI Integration Architecture
@@ -149,8 +152,15 @@ See `backend/prisma/MIGRATION_RULES.md` and `.cursorrules` for complete migratio
 ## Security & Privacy Framework
 
 ### Data Protection
-- **Firebase Authentication** with Google Sign-In for secure user access
-- **JWT token validation** for all API endpoints
+- **Custom Session Token System**: Separates Firebase identity from session management
+- **Firebase Authentication**: Used only for initial identity verification during login
+- **Session Tokens**: JWT-based custom session tokens for API authentication (30-day expiration)
+- **Refresh Tokens**: Long-lived tokens (90-day expiration) for obtaining new session tokens
+- **Immediate Revocation**: Session revocation via database check on each request
+- **One Session Per User**: New login automatically revokes all existing sessions
+- **Token Rotation**: New refresh tokens issued on each refresh for enhanced security
+- **Session Cleanup**: Automated cron job removes expired and revoked sessions
+- **JWT token validation** for all API endpoints using session tokens
 - **User-specific data isolation** with authentication context
 - **Backend-only API key access** for AI services
 - **Input validation** with comprehensive sanitization
@@ -165,7 +175,9 @@ See `backend/prisma/MIGRATION_RULES.md` and `.cursorrules` for complete migratio
 
 ### Privacy Considerations
 - **Multi-user support** with secure user data isolation
-- **Firebase Auth integration** for secure authentication
+- **Firebase Auth integration** for identity verification only
+- **Session token management** with local storage and automatic expiration
+- **Device info tracking** for security auditing (optional)
 - **User-specific data storage** with proper access controls
 - **No personal data sharing** with third parties
 - **Medical information protection** with appropriate handling
@@ -178,6 +190,7 @@ See `backend/prisma/MIGRATION_RULES.md` and `.cursorrules` for complete migratio
 - **Database**: Local PostgreSQL with Prisma migrations
 - **AI**: Google Gemini API with development key
 - **Authentication**: Firebase Auth with development configuration
+- **Session Tokens**: JWT_SECRET, JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN environment variables
 - **Hot reload**: Nodemon for backend, Flutter hot reload for frontend
 
 ### Production Environment
@@ -186,7 +199,9 @@ See `backend/prisma/MIGRATION_RULES.md` and `.cursorrules` for complete migratio
 - **API endpoint**: Custom domain with SSL certificate
 - **AI**: Google Gemini API with production key
 - **Authentication**: Firebase Auth with production configuration
+- **Session Tokens**: Production JWT_SECRET, JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN configuration
 - **Monitoring**: PM2 process monitoring and health checks
+- **Session Cleanup**: Automated daily cron job for expired session cleanup
 
 ### Common Development Commands
 - **Backend**: `npm run dev` (development), `npm run deploy:db` (database deployment)
@@ -225,7 +240,10 @@ See `backend/prisma/MIGRATION_RULES.md` and `.cursorrules` for complete migratio
 - **Caching strategies** for frequently accessed data
 - **Offline capability** with local storage and sync
 - **Memory management** for long-running app sessions
-- **Authentication state management** with automatic token refresh
+- **Session Token Management**: Custom session tokens stored in SharedPreferences
+- **AuthenticatedHttpClient**: Automatic token injection and 401 error handling
+- **Reactive Token Refresh**: Token refresh on expiration or 401 errors (not proactive)
+- **Authentication state management** with automatic token refresh and logout on revocation
 - **Error handling** with user-friendly messages and retry mechanisms
 
 ### Backend Performance

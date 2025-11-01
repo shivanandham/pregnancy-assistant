@@ -7,11 +7,14 @@ alwaysApply: false
 ## API Structure
 - Express.js backend with Prisma ORM
 - Main endpoints: /api/chat, /api/pregnancy, /api/symptoms, /api/appointments, /api/weight, /api/home
+- Auth endpoints: /api/auth/login, /api/auth/refresh, /api/auth/logout, /api/auth/logout-all
 - Security: Helmet.js, CORS, rate limiting, input validation with Joi
 - AI integration: Google Gemini API with pregnancy-specific context and medical disclaimers
 
 ## Database Schema (Prisma)
+- User: Firebase user integration with authentication data
 - UserProfile: User demographics and medical information
+- Session: Custom session token management (JWT tokens, refresh tokens, expiration tracking)
 - PregnancyData: Due date, LMP, and pregnancy timeline
 - ChatSession/ChatMessage: AI conversation management with diagnostic support
 - Symptom/Appointment/WeightEntry: Health tracking data
@@ -24,7 +27,9 @@ alwaysApply: false
 - **Development Database**: Local PostgreSQL on laptop
 - **Production Database**: PostgreSQL on DigitalOcean droplet
 - **AI**: Google Gemini API key required
-- **Authentication**: Firebase Auth with Google Sign-In
+- **Authentication**: Firebase Auth with Google Sign-In (identity verification only)
+- **Session Management**: Custom JWT session tokens with refresh tokens
+- **JWT Configuration**: JWT_SECRET, JWT_EXPIRES_IN (default: 30d), JWT_REFRESH_EXPIRES_IN (default: 90d)
 
 ## Common Commands
 - Backend: `npm run dev` (development), `npm run deploy:db` (database)
@@ -37,10 +42,16 @@ alwaysApply: false
 - Extract and store knowledge from conversations for future reference
 
 ## Authentication & Security
-- Firebase Auth with Google Sign-In for user authentication
-- JWT token validation for API endpoints
-- User session management with automatic token refresh
-- Secure user data synchronization between Firebase and backend
+- **Custom Session Token System**: Separates Firebase identity from session management
+- **Firebase Auth**: Used only for initial identity verification during login
+- **Session Tokens**: JWT-based custom session tokens for API authentication
+- **Refresh Tokens**: Long-lived tokens for obtaining new session tokens without re-authentication
+- **Session Service**: `backend/services/sessionService.js` handles token generation, verification, refresh, and revocation
+- **Token Validation**: All protected endpoints use session token middleware (not Firebase tokens)
+- **Session Control**: Immediate revocation via database check on each request
+- **One Session Per User**: New login revokes all existing sessions for the user
+- **Automatic Cleanup**: Cron job removes expired and revoked sessions
+- **Security Features**: Token rotation on refresh, device info tracking, expiration management
 - Multi-user support with user-specific data isolation
 
 ## Database Configuration
