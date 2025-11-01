@@ -100,6 +100,37 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **API**: RESTful design with consistent error handling
 - **State Management**: Provider pattern with separation of concerns
 
+### Database Migration Rules ⚠️ CRITICAL
+**ALL schema changes MUST go through Prisma migrations. Direct database modifications are STRICTLY PROHIBITED.**
+
+**Workflow - Development (Local Laptop):**
+1. Modify `prisma/schema.prisma`
+2. Generate and apply migration: `npx prisma migrate dev --name <descriptive-name>`
+   - This generates the migration file and applies it to your local database
+3. Carefully review generated migration SQL file
+4. Commit both `schema.prisma` and migration files together
+
+**Workflow - Production (Droplet):**
+1. Pull latest code with migrations
+2. Create database backup before applying
+3. Apply existing migrations: `npx prisma migrate deploy`
+   - This applies all pending migrations to the production database on droplet
+4. Verify migration status: `npx prisma migrate status`
+
+**Rules:**
+- ✅ DO: Use migrations for ALL schema changes
+- ✅ DO: Use descriptive migration names
+- ✅ DO: Review generated migration SQL carefully before committing
+- ✅ DO: Create database backups before major schema changes
+- ✅ DO: Commit both `schema.prisma` and migration files together
+- ❌ DON'T: Modify database directly via SQL
+- ❌ DON'T: Edit migration files after committing
+- ❌ DON'T: Skip or revert migrations
+- ❌ DON'T: Use `prisma db push` (always use migrations)
+- ❌ DON'T: Drop or recreate the database (data loss risk)
+
+See `backend/prisma/MIGRATION_RULES.md` and `.cursorrules` for complete migration guidelines.
+
 ### Pregnancy Calculation Standards
 - **Due date calculation**: LMP + 280 days (adjustable for cycle length variations)
 - **Current week calculation**: Days since LMP ÷ 7 (rounded down)
@@ -161,6 +192,7 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Backend**: `npm run dev` (development), `npm run deploy:db` (database deployment)
 - **Flutter**: `flutter pub get`, `flutter run`, `flutter build apk`
 - **Database**: `npm run db:studio` (Prisma Studio), `npm run test:db` (connection test)
+- **Migrations**: `npx prisma migrate dev --name <name>` (create and apply), `npx prisma migrate deploy` (apply existing), `npx prisma migrate status` (check)
 
 ## Business Logic & User Experience
 

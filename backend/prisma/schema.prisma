@@ -8,21 +8,21 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  firebaseUid  String   @unique @map("firebase_uid")
-  email        String
-  displayName  String?  @map("display_name")
-  photoURL     String?  @map("photo_url")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  
+  id          String   @id @default(uuid())
+  firebaseUid String   @unique @map("firebase_uid")
+  email       String
+  displayName String?  @map("display_name")
+  photoURL    String?  @map("photo_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
   // Relations
-  profile      UserProfile?
+  profile       UserProfile?
   pregnancyData PregnancyData?
-  symptoms     Symptom[]
-  appointments Appointment[]
+  symptoms      Symptom[]
+  appointments  Appointment[]
   weightEntries WeightEntry[]
-  chatSessions ChatSession[]
+  chatSessions  ChatSession[]
 
   @@map("users")
 }
@@ -43,25 +43,25 @@ model UserProfile {
   lifestyle          Json?
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
-  
+
   // Relations
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
 }
 
 model ChatSession {
-  id           String        @id @default(uuid())
-  userId       String        @map("user_id")
-  title        String        @default("New Chat")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  messageCount Int           @default(0) @map("message_count")
-  isActive     Boolean       @default(false) @map("is_active")
-  
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  title        String   @default("New Chat")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  messageCount Int      @default(0) @map("message_count")
+  isActive     Boolean  @default(false) @map("is_active")
+
   // Relations
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages     ChatMessage[]
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
 
   @@map("chat_sessions")
 }
@@ -74,9 +74,9 @@ model PregnancyData {
   notes               String?
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
-  
+
   // Relations
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("pregnancy_data")
 }
@@ -90,9 +90,9 @@ model Symptom {
   notes      String?
   customType String?  @map("custom_type")
   createdAt  DateTime @default(now()) @map("created_at")
-  
+
   // Relations
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([dateTime])
   @@index([userId])
@@ -111,9 +111,9 @@ model Appointment {
   isCompleted Boolean  @default(false) @map("is_completed")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  
+
   // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([dateTime])
   @@index([userId])
@@ -127,9 +127,9 @@ model WeightEntry {
   dateTime  DateTime @default(now()) @map("date_time")
   notes     String?
   createdAt DateTime @default(now()) @map("created_at")
-  
+
   // Relations
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([dateTime])
   @@index([userId])
@@ -199,16 +199,15 @@ model PregnancyTip {
 }
 
 model ChecklistCompletion {
-  id              String    @id @default(uuid())
-  checklistItemId String    @map("checklist_item_id")
-  completedAt     DateTime  @map("completed_at")
+  id              String   @id @default(uuid())
+  checklistItemId String   @map("checklist_item_id")
+  completedAt     DateTime @map("completed_at")
   date            DateTime
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  @@unique([checklistItemId, date], name: "checklistItemId_date")
-  @@map("checklist_completions")
+  @@unique([checklistItemId, date])
   @@index([date])
   @@index([checklistItemId])
+  @@map("checklist_completions")
 }
-

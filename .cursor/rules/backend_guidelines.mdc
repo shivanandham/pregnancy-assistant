@@ -19,11 +19,12 @@ alwaysApply: false
 - PregnancyTip/ChecklistCompletion: Tips and daily task tracking
 
 ## Environment Configuration
-- Development: http://192.168.0.8:3000 (local network)
-- Production: Self-hosted PostgreSQL on DigitalOcean
-- Database: Local PostgreSQL (dev) / Self-hosted PostgreSQL (prod)
-- AI: Google Gemini API key required
-- Authentication: Firebase Auth with Google Sign-In
+- **Development**: Local laptop (NODE_ENV=development)
+- **Production**: DigitalOcean droplet (NODE_ENV=production)
+- **Development Database**: Local PostgreSQL on laptop
+- **Production Database**: PostgreSQL on DigitalOcean droplet
+- **AI**: Google Gemini API key required
+- **Authentication**: Firebase Auth with Google Sign-In
 
 ## Common Commands
 - Backend: `npm run dev` (development), `npm run deploy:db` (database)
@@ -43,8 +44,51 @@ alwaysApply: false
 - Multi-user support with user-specific data isolation
 
 ## Database Configuration
-- Development: Local PostgreSQL with Prisma migrations
-- Production: Self-hosted PostgreSQL on DigitalOcean
-- Database URL configuration via environment variables
-- Automatic database URL selection based on NODE_ENV
-- Connection pooling and graceful shutdown handling
+- **Development Database**: Local PostgreSQL on laptop
+- **Production Database**: PostgreSQL on DigitalOcean droplet
+- **Database URL**: Configured via environment variables based on NODE_ENV
+- **Connection**: Automatic selection based on NODE_ENV
+- **Connection pooling**: Graceful shutdown handling
+- **Migrations**: Prisma migrations for all schema changes (must be in sync between environments)
+
+## Database Migration Rules ⚠️ CRITICAL
+**ALL schema changes MUST go through Prisma migrations. Direct database modifications are STRICTLY PROHIBITED.**
+
+### Required Migration Workflow
+1. **In Development** (local laptop):
+   - Modify `prisma/schema.prisma` with schema changes
+   - Generate and apply migration: `npx prisma migrate dev --name <descriptive-name>`
+     - This generates the migration file and applies it to your local database
+   - Carefully review generated migration SQL file in `prisma/migrations/`
+   - Commit both `schema.prisma` and migration files together
+
+2. **In Production** (droplet):
+   - Pull latest code with migrations
+   - Create database backup before applying migrations
+   - Apply existing migrations: `npx prisma migrate deploy`
+     - This applies migrations to the production database on droplet
+   - Verify migration status: `npx prisma migrate status`
+
+### ✅ DO's
+- ✅ Use migrations for ALL schema changes (tables, columns, indexes, constraints, foreign keys)
+- ✅ Use descriptive migration names (e.g., `add_user_email_verification`)
+- ✅ Review generated migration SQL carefully before committing
+- ✅ Create database backups before major schema changes
+- ✅ Commit both `schema.prisma` and migration files together
+
+### ❌ DON'Ts
+- ❌ NEVER modify database schema directly via SQL (CREATE TABLE, ALTER TABLE, DROP TABLE, etc.)
+- ❌ NEVER use direct database modifications via psql, pgAdmin, or other tools
+- ❌ NEVER edit migration files after they've been committed
+- ❌ NEVER skip or revert migrations
+- ❌ NEVER use `prisma db push` (always use migrations)
+- ❌ NEVER drop or recreate the database (data loss risk)
+- ❌ NEVER apply migrations without reviewing the generated SQL first
+
+### Migration Commands
+- **Development** (local laptop): `npx prisma migrate dev --name <name>` (create and apply)
+- **Production** (droplet): `npx prisma migrate deploy` (apply existing migrations)
+- Check status: `npx prisma migrate status`
+- Generate client: `npx prisma generate`
+
+See `backend/prisma/MIGRATION_RULES.md` for complete migration guidelines.
