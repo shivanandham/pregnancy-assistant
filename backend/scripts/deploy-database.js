@@ -9,15 +9,13 @@
 
 require('dotenv').config();
 const { execSync } = require('child_process');
-const fs = require('fs');
 const path = require('path');
 
 class DatabaseDeployer {
   constructor() {
     this.isProduction = process.env.NODE_ENV === 'production';
     this.requiredEnvVars = [
-      'PROD_DB_HOST',
-      'PROD_DB_PASSWORD'
+      'DATABASE_URL'
     ];
   }
 
@@ -39,37 +37,24 @@ class DatabaseDeployer {
     // Set production environment
     process.env.NODE_ENV = 'production';
     
-    // Check required environment variables
-    const missingVars = this.requiredEnvVars.filter(varName => !process.env[varName]);
-    
-    if (missingVars.length > 0) {
-      this.log(`Missing required environment variables: ${missingVars.join(', ')}`, 'error');
-      this.log('Please set these variables in your .env file:', 'error');
-      missingVars.forEach(varName => {
-        this.log(`  ${varName}=your_value_here`, 'error');
-      });
+    // Check if DATABASE_URL is set
+    // Prisma will automatically read DATABASE_URL from .env file
+    if (!process.env.DATABASE_URL) {
+      this.log('DATABASE_URL environment variable is required', 'error');
+      this.log('Please set DATABASE_URL in your .env file:', 'error');
+      this.log('  DATABASE_URL=postgresql://user:password@host:port/database', 'error');
+      this.log('', 'error');
+      this.log('Example for local PostgreSQL on droplet:', 'error');
+      this.log('  DATABASE_URL=postgresql://postgres:your_password@localhost:5432/pregnancy_assistant', 'error');
       process.exit(1);
     }
     
+    // Log database host (for debugging, hide credentials)
+    const dbUrl = process.env.DATABASE_URL;
+    const hostMatch = dbUrl.match(/@([^:]+):/);
+    const host = hostMatch ? hostMatch[1] : 'unknown';
+    this.log(`DATABASE_URL found (host: ${host})`, 'success');
     this.log('Environment variables validated', 'success');
-  }
-
-  updateDatabaseUrl() {
-    this.log('Setting DATABASE_URL for production deployment...');
-    
-    try {
-      // Set DATABASE_URL directly without modifying .env file
-      const DatabaseConfig = require('../config/database');
-      const databaseUrl = DatabaseConfig.getDatabaseUrl();
-      
-      // Set environment variable for current process only
-      process.env.DATABASE_URL = databaseUrl;
-      
-      this.log('DATABASE_URL set for deployment (not saved to .env)', 'success');
-    } catch (error) {
-      this.log(`Failed to set DATABASE_URL: ${error.message}`, 'error');
-      process.exit(1);
-    }
   }
 
   generatePrismaClient() {
@@ -123,21 +108,18 @@ class DatabaseDeployer {
     try {
       this.log('🚀 Starting database deployment...');
       this.log(`Environment: ${process.env.NODE_ENV}`);
-      this.log(`Database Host: ${process.env.PROD_DB_HOST || 'localhost'}`);
       
-      // Step 1: Check environment
+      // Step 1: Check environment (validates DATABASE_URL is set)
       this.checkEnvironment();
       
-      // Step 2: Update DATABASE_URL
-      this.updateDatabaseUrl();
-      
-      // Step 3: Generate Prisma client
+      // Step 2: Generate Prisma client
       this.generatePrismaClient();
       
-      // Step 4: Deploy migrations
+      // Step 3: Deploy migrations
+      // Note: Prisma will automatically read DATABASE_URL from .env file
       this.deployMigrations();
       
-      // Step 5: Test connection
+      // Step 4: Test connection
       this.testConnection();
       
       this.log('🎉 Database deployment completed successfully!', 'success');

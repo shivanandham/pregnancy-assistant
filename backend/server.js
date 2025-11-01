@@ -3,9 +3,9 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-// Import Prisma client and database configuration
+// Import Prisma client
+// Prisma automatically reads DATABASE_URL from .env file
 const prisma = require('./lib/prisma');
-const setDatabaseUrl = require('./scripts/set-database-url');
 
 // Import middleware
 const { securityMiddleware, apiLimiter, chatLimiter } = require('./middleware/security');
@@ -39,21 +39,11 @@ if (!process.env.GEMINI_API_KEY) {
   process.exit(1);
 }
 
-// Set the correct DATABASE_URL based on environment
-console.log('🔍 DEBUG: NODE_ENV =', process.env.NODE_ENV);
-console.log('🔍 DEBUG: About to set DATABASE_URL...');
-
-if (process.env.NODE_ENV === 'production') {
-  console.log('🔍 DEBUG: Using production mode - setting DATABASE_URL directly');
-  // In production, set DATABASE_URL directly from environment variables
-  const DatabaseConfig = require('./config/database');
-  process.env.DATABASE_URL = DatabaseConfig.getDatabaseUrl();
-  console.log('🔍 DEBUG: DATABASE_URL set successfully in production mode');
-} else {
-  console.log('🔍 DEBUG: Using development mode - calling setDatabaseUrl()');
-  // In development, use the set-database-url script
-  setDatabaseUrl();
-  console.log('🔍 DEBUG: setDatabaseUrl() completed in development mode');
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is required in environment variables');
+  console.error('Please set DATABASE_URL in your .env file');
+  console.error('Example: DATABASE_URL=postgresql://postgres:password@localhost:5432/pregnancy_assistant');
+  process.exit(1);
 }
 
 // Logging middleware (should be early in the chain)
@@ -82,7 +72,7 @@ app.use('/api', apiLimiter);
 app.use('/api/chat', chatLimiter);
 
 // Health check endpoint
-app.get('/health', async (req, res) => {
+app.get('/api/health', async (req, res) => {
   try {
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;
@@ -195,7 +185,7 @@ async function startServer() {
     // Start server
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Luma Pregnancy Assistant Backend running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
+      console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
       console.log(`💬 Chat API: http://localhost:${PORT}/api/chat`);
       console.log(`📱 API Base: http://localhost:${PORT}/api`);
       console.log(`🗄️ Database: ${process.env.NODE_ENV === 'development' ? 'Local PostgreSQL' : 'Supabase PostgreSQL'}`);

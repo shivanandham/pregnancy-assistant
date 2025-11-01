@@ -5,7 +5,7 @@ This guide will help you deploy the Luma Pregnancy Assistant backend to a Digita
 ## Prerequisites
 
 - DigitalOcean account
-- Domain name (optional, for custom domain)
+- Domain name: `lumacare.in` (already configured)
 - SSH key pair for server access
 
 ## Step 1: Create DigitalOcean Droplet
@@ -50,9 +50,13 @@ apt install postgresql postgresql-contrib -y
 npm install -g pm2
 ```
 
-### Install Nginx (for reverse proxy):
+### Install Caddy (for reverse proxy and automatic HTTPS):
 ```bash
-apt install nginx -y
+apt install -y debian-keyring debian-archive-keyring apt-transport-https
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+apt update
+apt install caddy -y
 ```
 
 ## Step 3: PostgreSQL Configuration
@@ -65,13 +69,13 @@ sudo -u postgres psql
 ### In PostgreSQL shell:
 ```sql
 -- Create database
-CREATE DATABASE pregnancy_assistant;
+CREATE DATABASE luma;
 
 -- Create user (replace with your desired username/password)
-CREATE USER pregnancy_user WITH PASSWORD 'your_secure_password';
+CREATE USER postgres WITH PASSWORD 'your_secure_password';
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE pregnancy_assistant TO pregnancy_user;
+GRANT ALL PRIVILEGES ON DATABASE luma TO postgres;
 
 -- Exit PostgreSQL
 \q
@@ -89,7 +93,7 @@ listen_addresses = 'localhost'
 nano /etc/postgresql/14/main/pg_hba.conf
 
 # Add line for local connections:
-local   pregnancy_assistant   pregnancy_user                    md5
+local   luma   postgres                    md5
 ```
 
 ### Restart PostgreSQL:
@@ -100,8 +104,9 @@ systemctl enable postgresql
 
 ## Step 4: Deploy Application
 
-### Create application directory:
+### Create application directories:
 ```bash
+# Backend directory
 mkdir -p /var/www/pregnancy-assistant
 cd /var/www/pregnancy-assistant
 ```
@@ -131,17 +136,24 @@ GEMINI_API_KEY=your_gemini_api_key_here
 PORT=3000
 NODE_ENV=production
 
-# Production PostgreSQL Configuration
-PROD_DB_HOST=localhost
-PROD_DB_PORT=5432
-PROD_DB_NAME=pregnancy_assistant
-PROD_DB_USER=pregnancy_user
-PROD_DB_PASSWORD=your_secure_password
+# PostgreSQL Database Configuration
+# Prisma automatically reads DATABASE_URL from .env file
+DATABASE_URL=postgresql://postgres:your_secure_password@localhost:5432/luma
+
+# Session Token Configuration
+JWT_SECRET=your_strong_secret_key_here
+JWT_EXPIRES_IN=30d
+JWT_REFRESH_EXPIRES_IN=90d
+
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_private_key\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=your_firebase_client_email
 ```
 
 ### Deploy database schema:
 ```bash
-npm run deploy:db
+NODE_ENV=production npm run deploy:db
 ```
 
 ### Test the application:
@@ -182,58 +194,83 @@ pm2 save
 pm2 startup
 ```
 
-## Step 6: Configure Nginx Reverse Proxy
+## Step 6: Configure Caddy Reverse Proxy
 
-### Create Nginx configuration:
+Caddy automatically handles HTTPS with Let's Encrypt certificates.
+
+**Note**: This configuration routes `/api/*` requests to the backend and serves a landing page at the root domain.
+
+### Create Caddy configuration:
 ```bash
-nano /etc/nginx/sites-available/pregnancy-assistant
+nano /etc/caddy/Caddyfile
 ```
 
-### Add Nginx configuration:
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;  # Replace with your domain or IP
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+### Add Caddy configuration:
+```
+lumacare.in {
+    # Route API requests to backend (must come first for proper matching)
+    handle /api/* {
+        reverse_proxy localhost:3000 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
     }
+
+    # Serve landing page files directly from repository
+    root * /var/www/pregnancy-assistant/landing_page
+    file_server
+    try_files {path} /index.html
 }
 ```
 
-### Enable the site:
+### Test Caddy configuration:
 ```bash
-ln -s /etc/nginx/sites-available/pregnancy-assistant /etc/nginx/sites-enabled/
-nginx -t
-systemctl restart nginx
+caddy validate --config /etc/caddy/Caddyfile
 ```
 
-## Step 7: SSL Certificate (Optional but Recommended)
-
-### Install Certbot:
+### Enable and start Caddy:
 ```bash
-apt install certbot python3-certbot-nginx -y
+systemctl enable caddy
+systemctl restart caddy
 ```
 
-### Obtain SSL certificate:
+### Check Caddy status:
 ```bash
-certbot --nginx -d your-domain.com
+systemctl status caddy
 ```
+
+Caddy will automatically:
+- Obtain SSL certificate from Let's Encrypt
+- Renew certificates automatically
+- Redirect HTTP to HTTPS
+
+## Step 7: DNS Configuration
+
+Before Caddy can obtain SSL certificates, ensure your DNS is configured:
+
+1. **Add A record** pointing `lumacare.in` to your droplet IP:
+   - Type: `A`
+   - Name: `lumacare.in` (or `@`)
+   - Value: Your droplet IP address
+   - TTL: 3600 (or default)
+
+2. **Wait for DNS propagation** (can take a few minutes to 48 hours)
+
+3. **Verify DNS**:
+   ```bash
+   dig lumacare.in
+   # or
+   nslookup lumacare.in
+   ```
 
 ## Step 8: Security Hardening
 
 ### Configure UFW firewall:
 ```bash
 ufw allow ssh
-ufw allow 'Nginx Full'
+ufw allow 80/tcp    # HTTP
+ufw allow 443/tcp   # HTTPS
 ufw enable
 ```
 
@@ -278,7 +315,7 @@ DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p $BACKUP_DIR
 
 # Database backup
-pg_dump -h localhost -U pregnancy_user pregnancy_assistant > $BACKUP_DIR/db_backup_$DATE.sql
+sudo -u postgres pg_dump luma > $BACKUP_DIR/db_backup_$DATE.sql
 
 # Keep only last 7 days of backups
 find $BACKUP_DIR -name "db_backup_*.sql" -mtime +7 -delete
@@ -303,9 +340,11 @@ crontab -e
 pm2 logs pregnancy-assistant
 ```
 
-### Check Nginx logs:
+### Check Caddy logs:
 ```bash
-tail -f /var/log/nginx/error.log
+journalctl -u caddy -f
+# or
+tail -f /var/log/caddy/access.log
 ```
 
 ### Check PostgreSQL logs:
@@ -316,7 +355,7 @@ tail -f /var/log/postgresql/postgresql-14-main.log
 ### Restart services:
 ```bash
 pm2 restart pregnancy-assistant
-systemctl restart nginx
+systemctl restart caddy
 systemctl restart postgresql
 ```
 
@@ -324,14 +363,16 @@ systemctl restart postgresql
 
 | Variable | Description | Example |
 |----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:password@localhost:5432/luma` |
 | `GEMINI_API_KEY` | Google Gemini API key | `AIza...` |
 | `PORT` | Application port | `3000` |
 | `NODE_ENV` | Environment | `production` |
-| `PROD_DB_HOST` | Database host | `localhost` |
-| `PROD_DB_PORT` | Database port | `5432` |
-| `PROD_DB_NAME` | Database name | `pregnancy_assistant` |
-| `PROD_DB_USER` | Database user | `pregnancy_user` |
-| `PROD_DB_PASSWORD` | Database password | `secure_password` |
+| `JWT_SECRET` | Secret for JWT token generation | `your_strong_secret` |
+| `JWT_EXPIRES_IN` | Session token expiration | `30d` |
+| `JWT_REFRESH_EXPIRES_IN` | Refresh token expiration | `90d` |
+| `FIREBASE_PROJECT_ID` | Firebase project ID | `your-project-id` |
+| `FIREBASE_PRIVATE_KEY` | Firebase private key | `-----BEGIN PRIVATE KEY-----...` |
+| `FIREBASE_CLIENT_EMAIL` | Firebase client email | `your-email@project.iam.gserviceaccount.com` |
 
 ## Cost Optimization
 
@@ -355,7 +396,10 @@ systemctl restart postgresql
 ## Support
 
 For issues specific to this deployment:
-1. Check application logs with `pm2 logs`
-2. Verify database connectivity
-3. Check Nginx configuration with `nginx -t`
-4. Review system resources with `htop` and `df -h`
+1. Check application logs with `pm2 logs pregnancy-assistant`
+2. Verify database connectivity with `npm run test:db`
+3. Check Caddy status with `systemctl status caddy`
+4. Review Caddy logs with `journalctl -u caddy -f`
+5. Verify DNS resolution with `dig lumacare.in`
+6. Test health endpoint: `curl https://lumacare.in/api/health`
+7. Review system resources with `htop` and `df -h`

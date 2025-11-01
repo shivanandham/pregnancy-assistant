@@ -1,16 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
-const setDatabaseUrl = require('../scripts/set-database-url');
 
-// Set the correct DATABASE_URL based on environment
-if (process.env.NODE_ENV === 'production') {
-  // In production, set DATABASE_URL directly from environment variables
-  const DatabaseConfig = require('../config/database');
-  process.env.DATABASE_URL = DatabaseConfig.getDatabaseUrl();
-} else {
-  // In development, use the set-database-url script
-  setDatabaseUrl();
-}
-
+// Prisma automatically reads DATABASE_URL from .env file (via dotenv)
+// No need to set it manually - just ensure DATABASE_URL is in your .env file
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
 });
