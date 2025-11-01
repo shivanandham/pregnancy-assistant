@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const SessionService = require('../services/sessionService');
 
 // Initialize Firebase Admin SDK with environment-based configuration
 if (!admin.apps.length) {
@@ -24,38 +25,24 @@ if (!admin.apps.length) {
 }
 
 /**
- * Unified token verification using Firebase Admin SDK
+ * Verify Firebase token (only used for login endpoint)
  * Works for both development and production environments
  */
-const verifyToken = async (req, res, next) => {
+const verifyFirebaseToken = async (token) => {
   try {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'No token provided'
-      });
-    }
-    
-    const token = authHeader.split('Bearer ')[1];
-    
     // Try to verify as ID token first (for Flutter/real authentication)
     try {
       const decodedToken = await admin.auth().verifyIdToken(token);
       
-      req.user = {
-        uid: decodedToken.uid,
-        email: decodedToken.email,
-        name: decodedToken.name,
-        picture: decodedToken.picture
+      return {
+        success: true,
+        user: {
+          uid: decodedToken.uid,
+          email: decodedToken.email,
+          name: decodedToken.name,
+          picture: decodedToken.picture
+        }
       };
-      
-      const environment = process.env.NODE_ENV === 'development' ? 'DEVELOPMENT' : 'PRODUCTION';
-      console.log(`🔧 ${environment} mode: Verified ID token for user ${decodedToken.uid}`);
-      
-      next();
-      return;
     } catch (idTokenError) {
       // If ID token verification fails, try custom token verification
       console.log('🔧 ID token verification failed, trying custom token verification...');
@@ -85,31 +72,67 @@ const verifyToken = async (req, res, next) => {
       }
       
       // Extract user info from custom token
-      req.user = {
-        uid: payload.uid,
-        email: payload.claims?.email || 'test@example.com',
-        name: payload.claims?.name || 'Test User',
-        picture: payload.claims?.picture || 'https://example.com/test-avatar.jpg'
+      return {
+        success: true,
+        user: {
+          uid: payload.uid,
+          email: payload.claims?.email || 'test@example.com',
+          name: payload.claims?.name || 'Test User',
+          picture: payload.claims?.picture || 'https://example.com/test-avatar.jpg'
+        }
       };
-      
-      const environment = process.env.NODE_ENV === 'development' ? 'DEVELOPMENT' : 'PRODUCTION';
-      console.log(`🔧 ${environment} mode: Verified custom token for user ${payload.uid}`);
-      
-      next();
-      return;
     } catch (customTokenError) {
       console.error('Custom token verification error:', customTokenError.message);
+      throw customTokenError;
     }
     
-    // If both verifications fail
-    console.error('Token verification failed for both ID and custom tokens');
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid token'
-    });
-    
   } catch (error) {
-    console.error('Token verification error:', error);
+    console.error('Firebase token verification error:', error);
+    return {
+      success: false,
+      error: error.message || 'Invalid token'
+    };
+  }
+};
+
+/**
+ * Verify session token (used for all protected endpoints)
+ */
+const verifySessionToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided'
+      });
+    }
+    
+    const token = authHeader.split('Bearer ')[1];
+    
+    // Verify session token
+    const verification = await SessionService.verifySessionToken(token);
+    
+    if (!verification.valid) {
+      return res.status(401).json({
+        success: false,
+        message: verification.error || 'Invalid token'
+      });
+    }
+    
+    // Set user info from session
+    req.session = verification.session;
+    req.user = {
+      uid: verification.session.user.firebaseUid,
+      email: verification.session.user.email,
+      name: verification.session.user.displayName,
+      picture: verification.session.user.photoURL
+    };
+    
+    next();
+  } catch (error) {
+    console.error('Session token verification error:', error);
     return res.status(401).json({
       success: false,
       message: 'Invalid token'
@@ -122,6 +145,14 @@ const verifyToken = async (req, res, next) => {
  */
 const getUserFromDatabase = async (req, res, next) => {
   try {
+    // If session already has user (from session token verification), use it
+    if (req.session?.user) {
+      req.dbUser = req.session.user;
+      next();
+      return;
+    }
+    
+    // Otherwise, look up user by Firebase UID (for backward compatibility)
     const prisma = require('../lib/prisma');
     
     // Check if user exists in database
@@ -164,10 +195,11 @@ const getUserFromDatabase = async (req, res, next) => {
 /**
  * Combined auth middleware
  */
-const auth = [verifyToken, getUserFromDatabase];
+const auth = [verifySessionToken, getUserFromDatabase];
 
 module.exports = {
-  verifyToken,
+  verifyFirebaseToken,
+  verifySessionToken,
   getUserFromDatabase,
   auth
 };

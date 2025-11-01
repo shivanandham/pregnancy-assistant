@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const DailyChecklist = require('../models/DailyChecklist');
 const Pregnancy = require('../models/Pregnancy');
 const UserProfile = require('../models/UserProfile');
+const SessionService = require('./sessionService');
 
 class CronService {
   static start() {
@@ -16,8 +17,17 @@ class CronService {
       timezone: 'Asia/Kolkata'
     });
 
+    // Clean up expired sessions daily at 2:00 AM IST (8:30 PM UTC previous day)
+    cron.schedule('30 20 * * *', async () => {
+      console.log('🔄 Running session cleanup job...');
+      await this.cleanupExpiredSessions();
+    }, {
+      timezone: 'Asia/Kolkata'
+    });
+
     console.log('✅ Cron jobs started successfully');
     console.log('📅 Daily checklist generation scheduled for 12:00 AM IST');
+    console.log('🧹 Session cleanup scheduled for 2:00 AM IST');
   }
 
   static async generateDailyChecklists() {
@@ -61,6 +71,16 @@ class CronService {
   static async triggerDailyChecklistGeneration() {
     console.log('🧪 Manually triggering daily checklist generation...');
     await this.generateDailyChecklists();
+  }
+
+  static async cleanupExpiredSessions() {
+    try {
+      console.log('🧹 Cleaning up expired sessions...');
+      const result = await SessionService.cleanupExpiredSessions();
+      console.log(`✅ Cleaned up ${result.deleted} expired session(s)`);
+    } catch (error) {
+      console.error('❌ Error cleaning up expired sessions:', error);
+    }
   }
 }
 

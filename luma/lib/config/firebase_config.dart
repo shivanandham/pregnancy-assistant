@@ -21,7 +21,7 @@ class FirebaseConfig {
   
   // Backend URL configuration
   static String get backendUrl => isDevelopment
-    ? 'http://192.168.0.9:3000'  // Development backend
+    ? 'http://192.168.0.8:3000'  // Development backend
     : 'https://pregnancy-assistant-production.up.railway.app'; // Production backend
   
   // Logging

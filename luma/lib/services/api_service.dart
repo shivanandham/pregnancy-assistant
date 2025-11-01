@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import 'http_client.dart';
 import '../models/chat_message.dart';
@@ -70,10 +69,7 @@ class ApiService {
   // Symptoms API
   static Future<List<Symptom>> getSymptoms() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/symptoms'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/symptoms');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -95,10 +91,9 @@ class ApiService {
 
   static Future<Symptom?> addSymptom(Symptom symptom) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/symptoms'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-        body: jsonEncode(symptom.toJson()),
+      final response = await AuthenticatedHttpClient.post(
+        '/api/symptoms',
+        body: symptom.toJson(),
       );
 
       if (response.statusCode == 201) {
@@ -116,10 +111,7 @@ class ApiService {
 
   static Future<bool> deleteSymptom(String id) async {
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/api/symptoms/$id'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.delete('/api/symptoms/$id');
       return response.statusCode == 200;
     } catch (e) {
       print('Error deleting symptom: $e');
@@ -130,10 +122,7 @@ class ApiService {
   // Appointments API
   static Future<List<Appointment>> getAppointments() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/appointments'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/appointments');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -145,17 +134,14 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      print('Error getting appointments: $e');
+      print('❌ Error getting appointments: $e');
       return [];
     }
   }
 
   static Future<List<Appointment>> getUpcomingAppointments() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/appointments/upcoming'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/appointments/upcoming');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -174,10 +160,9 @@ class ApiService {
 
   static Future<Appointment?> addAppointment(Appointment appointment) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/appointments'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-        body: jsonEncode(appointment.toJson()),
+      final response = await AuthenticatedHttpClient.post(
+        '/api/appointments',
+        body: appointment.toJson(),
       );
 
       if (response.statusCode == 201) {
@@ -195,10 +180,9 @@ class ApiService {
 
   static Future<Appointment?> updateAppointment(String id, Appointment appointment) async {
     try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/api/appointments/$id'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-        body: jsonEncode(appointment.toJson()),
+      final response = await AuthenticatedHttpClient.put(
+        '/api/appointments/$id',
+        body: appointment.toJson(),
       );
 
       if (response.statusCode == 200) {
@@ -216,10 +200,7 @@ class ApiService {
 
   static Future<bool> deleteAppointment(String id) async {
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/api/appointments/$id'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.delete('/api/appointments/$id');
       return response.statusCode == 200;
     } catch (e) {
       print('Error deleting appointment: $e');
@@ -230,10 +211,7 @@ class ApiService {
   // Weight API
   static Future<List<WeightEntry>> getWeightEntries() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/weight'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/weight');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -252,10 +230,9 @@ class ApiService {
 
   static Future<WeightEntry?> addWeightEntry(WeightEntry weightEntry) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/weight'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-        body: jsonEncode(weightEntry.toJson()),
+      final response = await AuthenticatedHttpClient.post(
+        '/api/weight',
+        body: weightEntry.toJson(),
       );
 
       if (response.statusCode == 201) {
@@ -273,10 +250,7 @@ class ApiService {
 
   static Future<bool> deleteWeightEntry(String id) async {
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/api/weight/$id'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.delete('/api/weight/$id');
       return response.statusCode == 200;
     } catch (e) {
       print('Error deleting weight entry: $e');
@@ -291,14 +265,13 @@ class ApiService {
     String? sessionId,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/chat'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-        body: jsonEncode({
+      final response = await AuthenticatedHttpClient.post(
+        '/api/chat',
+        body: {
           'message': message,
           'context': context,
           'sessionId': sessionId,
-        }),
+        },
       );
 
       if (response.statusCode == 200) {
@@ -350,10 +323,7 @@ class ApiService {
 
   static Future<List<ChatMessage>> getChatHistory({int limit = 50}) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/chat/history?limit=$limit'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/chat/history?limit=$limit');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -372,10 +342,7 @@ class ApiService {
 
   static Future<bool> clearChatHistory() async {
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/api/chat/history'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.delete('/api/chat/history');
       return response.statusCode == 200;
     } catch (e) {
       print('Error clearing chat history: $e');
@@ -386,10 +353,7 @@ class ApiService {
   // Knowledge API
   static Future<List<Map<String, dynamic>>> searchKnowledge(String query) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/knowledge/search?q=${Uri.encodeComponent(query)}'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/knowledge/search?q=${Uri.encodeComponent(query)}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -445,10 +409,9 @@ class ApiService {
 
   static Future<UserProfile?> updateUserProfile(Map<String, dynamic> updates) async {
     try {
-      final response = await http.patch(
-        Uri.parse('$baseUrl/api/user-profile'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-        body: jsonEncode(updates),
+      final response = await AuthenticatedHttpClient.patch(
+        '/api/user-profile',
+        body: updates,
       );
 
       if (response.statusCode == 200) {
@@ -466,10 +429,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>?> getProfileContext() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/user-profile/context'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/user-profile/context');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -945,12 +905,11 @@ class ApiService {
   // Checklist completion methods
   static Future<bool> toggleChecklistCompletion(String checklistItemId, {DateTime? date}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/checklist/$checklistItemId/toggle'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-        body: jsonEncode({
+      final response = await AuthenticatedHttpClient.post(
+        '/api/checklist/$checklistItemId/toggle',
+        body: {
           'date': date?.toIso8601String() ?? DateTime.now().toIso8601String(),
-        }),
+        },
       );
 
       if (response.statusCode == 200) {
@@ -967,10 +926,7 @@ class ApiService {
   static Future<List<String>> getChecklistCompletions(DateTime date) async {
     try {
       final dateString = date.toIso8601String().split('T')[0]; // YYYY-MM-DD format
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/checklist/completions/$dateString'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/checklist/completions/$dateString');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -991,10 +947,7 @@ class ApiService {
     try {
       final startString = startDate.toIso8601String().split('T')[0];
       final endString = endDate.toIso8601String().split('T')[0];
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/checklist/completions/range?startDate=$startString&endDate=$endString'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/checklist/completions/range?startDate=$startString&endDate=$endString');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -1012,10 +965,7 @@ class ApiService {
   // Get checklist statistics
   static Future<Map<String, dynamic>?> getChecklistStats({int days = 7}) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/checklist/stats?days=$days'),
-        headers: await AuthenticatedHttpClient.getHeaders(),
-      );
+      final response = await AuthenticatedHttpClient.get('/api/checklist/stats?days=$days');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

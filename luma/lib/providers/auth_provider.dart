@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/user_sync_service.dart';
+import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
   User? _user;
@@ -107,7 +108,28 @@ class AuthProvider with ChangeNotifier {
   /// Get user profile from backend
   Future<Map<String, dynamic>?> getUserProfile() async {
     try {
-      return await AuthService.getUserProfile();
+      final profile = await ApiService.getUserProfile();
+      if (profile != null) {
+        return {
+          'id': profile.id,
+          'height': profile.height,
+          'weight': profile.weight,
+          'prePregnancyWeight': profile.prePregnancyWeight,
+          'age': profile.age,
+          'gender': profile.gender,
+          'locality': profile.locality,
+          'medicalHistory': profile.medicalHistory,
+          'allergies': profile.allergies,
+          'medications': profile.medications,
+          'timezone': profile.timezone,
+          'lifestyle': profile.lifestyle != null ? {
+            'diet': profile.lifestyle!.diet,
+            'exercise': profile.lifestyle!.exercise,
+            'smoking': profile.lifestyle!.smoking,
+          } : null,
+        };
+      }
+      return null;
     } catch (e) {
       _setError('Failed to get user profile: $e');
       return null;
@@ -117,22 +139,18 @@ class AuthProvider with ChangeNotifier {
   /// Sync user with backend (internal method)
   Future<void> _syncUserWithBackend(User user) async {
     try {
-      print('🔄 AuthProvider: Syncing user with backend...');
       final result = await UserSyncService.syncUser(user);
       
       if (result['success']) {
         _isSynced = true;
         _userAccount = result['data'];
-        print('✅ AuthProvider: User synced successfully');
       } else {
         _isSynced = false;
         _setError('Failed to sync user: ${result['error']}');
-        print('❌ AuthProvider: User sync failed: ${result['error']}');
       }
     } catch (e) {
       _isSynced = false;
       _setError('Error syncing user: $e');
-      print('❌ AuthProvider: Error syncing user: $e');
     }
   }
 
@@ -166,7 +184,6 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return isSynced;
     } catch (e) {
-      print('❌ Error checking sync status: $e');
       return false;
     }
   }
@@ -185,7 +202,6 @@ class AuthProvider with ChangeNotifier {
       }
       return account;
     } catch (e) {
-      print('❌ Error getting user account: $e');
       return null;
     }
   }

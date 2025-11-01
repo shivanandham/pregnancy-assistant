@@ -53,6 +53,7 @@ dependencies:
   
   # Utilities
   uuid: ^4.3.3
+  shared_preferences: ^2.2.2
   
   # Authentication
   google_sign_in: ^6.2.1
