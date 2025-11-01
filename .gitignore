@@ -101,3 +101,7 @@ ehthumbs.db
 Thumbs.db
 
 secrets/
+
+# Firebase/Google Services configuration files (secrets)
+luma/android/app/google-services.json
+luma/ios/Runner/GoogleService-Info.plist

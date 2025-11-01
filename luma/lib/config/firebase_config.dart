@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'backend_config.dart';
 
 class FirebaseConfig {
   // Environment detection
@@ -10,19 +11,12 @@ class FirebaseConfig {
     ? 'luma-pregnancy-assistant'  // Development project
     : 'luma-pregnancy-assistant-prod'; // Production project
   
-  // Configuration file names
-  static String get androidConfigFile => isDevelopment
-    ? 'google-services-dev.json'
-    : 'google-services-prod.json';
-    
-  static String get iosConfigFile => isDevelopment
-    ? 'GoogleService-Info-dev.plist'
-    : 'GoogleService-Info-prod.plist';
+  // Note: google-services.json is a secret file that should be updated manually
+  // based on the environment (development vs production)
+  // The file is gitignored and should be placed in android/app/google-services.json
   
-  // Backend URL configuration
-  static String get backendUrl => isDevelopment
-    ? 'http://192.168.0.8:3000'  // Development backend
-    : 'https://pregnancy-assistant-production.up.railway.app'; // Production backend
+  // Backend URL configuration - uses BackendConfig as single source of truth
+  static String get backendUrl => BackendConfig.url;
   
   // Logging
   static void logEnvironment() {
@@ -30,8 +24,7 @@ class FirebaseConfig {
       print('🔧 Firebase Environment: ${isDevelopment ? "DEVELOPMENT" : "PRODUCTION"}');
       print('🔧 Firebase Project ID: $projectId');
       print('🔧 Backend URL: $backendUrl');
-      print('🔧 Android Config: $androidConfigFile');
-      print('🔧 iOS Config: $iosConfigFile');
+      print('⚠️  Note: google-services.json must be manually updated for the correct environment');
     }
   }
 }

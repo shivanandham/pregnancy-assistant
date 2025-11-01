@@ -1,37 +1,26 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'backend_config.dart';
 
+/// API configuration for HTTP client settings
+/// Uses BackendConfig as single source of truth for URL and environment info
 class ApiConfig {
-  static String get baseUrl {
-    // Check if we're in debug mode (development)
-    if (kDebugMode) {
-      // For development, use your computer's IP address (Android emulator can't reach localhost)
-      return 'http://192.168.0.8:3000';
-    } else {
-      // For production, use the deployed URL
-      return 'https://pregnancy-assistant-production.up.railway.app';
-    }
-  }
+  /// Backend base URL - delegates to BackendConfig
+  static String get baseUrl => BackendConfig.url;
   
+  /// Request timeout duration
   static const Duration timeout = Duration(seconds: 30);
   
+  /// Default HTTP headers for API requests
   static Map<String, String> get headers => {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
   
-  // Helper method to get environment info
-  static String get environment {
-    if (kDebugMode) {
-      return 'development';
-    } else {
-      return 'production';
-    }
-  }
+  /// Environment info - delegates to BackendConfig
+  static String get environment => BackendConfig.environment;
   
-  // Helper method to check if we're in development
-  static bool get isDevelopment => kDebugMode;
+  /// Development mode check - delegates to BackendConfig
+  static bool get isDevelopment => BackendConfig.isDevelopment;
   
-  // Helper method to check if we're in production
-  static bool get isProduction => !kDebugMode;
+  /// Production mode check - delegates to BackendConfig
+  static bool get isProduction => BackendConfig.isProduction;
 }
