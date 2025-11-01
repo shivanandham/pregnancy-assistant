@@ -11,32 +11,29 @@ class PregnancyTip {
   }
 
   static async getTipsForWeek(week) {
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
-
-    // Check if we have cached tips for this week and today
+    // First check if we have any tips for this week (not expired)
+    const now = new Date();
     const existingTips = await prisma.pregnancyTip.findMany({
       where: {
         week: week,
-        createdAt: {
-          gte: startOfDay,
-          lt: endOfDay
-        }
+        expiresAt: { gt: now }
       },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { createdAt: 'desc' }
     });
 
-    if (existingTips.length >= 10) {
+    // If we have tips (even just 1), return them
+    if (existingTips.length > 0) {
       return existingTips.map(tip => new PregnancyTip(tip));
     }
 
-    // If we don't have enough tips, generate new ones with Gemini
+    // If we don't have any tips, generate new ones with Gemini
     try {
       return await this.generateTipsForWeek(week);
     } catch (error) {
       console.error(`Failed to generate tips for week ${week}:`, error);
-      throw new Error(`Unable to generate pregnancy tips for week ${week}. Please try again later.`);
+      // If generation fails, return fallback tips
+      console.log(`Falling back to default tips for week ${week}`);
+      return await this.getFallbackTips(week);
     }
   }
 
@@ -87,7 +84,7 @@ Make tips specific to week ${week} of pregnancy. Use categories: nutrition, heal
               week: week,
               tip: tipData.tip,
               category: tipData.category,
-              expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // Expires in 24 hours
+              expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Expires in 7 days (1 week)
             }
           });
           savedTips.push(new PregnancyTip(saved));

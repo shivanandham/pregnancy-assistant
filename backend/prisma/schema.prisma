@@ -24,6 +24,7 @@ model User {
   weightEntries WeightEntry[]
   chatSessions  ChatSession[]
   sessions      Session[]
+  dailyChecklistItems DailyChecklistItem[]
 
   @@map("users")
 }
@@ -197,6 +198,30 @@ model PregnancyTip {
   @@index([week])
   @@index([expiresAt])
   @@map("pregnancy_tips")
+}
+
+model DailyChecklistItem {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  task        String
+  category    String
+  week        Int?
+  trimester   Int?
+  frequency   String   @default("daily")
+  important   Boolean  @default(false)
+  personalized Boolean @default(false)
+  date        DateTime
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date, task])
+  @@index([userId])
+  @@index([date])
+  @@index([expiresAt])
+  @@map("daily_checklist_items")
 }
 
 model ChecklistCompletion {

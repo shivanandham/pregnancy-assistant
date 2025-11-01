@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const prisma = require('../lib/prisma');
 
 class DailyChecklist {
   constructor(data) {
@@ -13,8 +14,46 @@ class DailyChecklist {
     this.generatedAt = data.generatedAt;
   }
 
-  static async generateDynamicChecklist(pregnancy, userProfile, date = new Date()) {
+  static async generateDynamicChecklist(pregnancy, userProfile, date = new Date(), userId = null) {
+    // Check if we already have a checklist for this user and date (cached for today)
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Get userId from parameter or pregnancy object
+    const targetUserId = userId || pregnancy.userId;
+
     try {
+      // Check for existing checklist items for this user and date
+      const existingItems = await prisma.dailyChecklistItem.findMany({
+        where: {
+          userId: targetUserId,
+          date: {
+            gte: targetDate,
+            lte: endOfDay
+          },
+          expiresAt: { gt: new Date() }
+        },
+        orderBy: { createdAt: 'asc' }
+      });
+
+      // If we have cached items for today, return them
+      if (existingItems.length > 0) {
+        return existingItems.map(item => new DailyChecklist({
+          id: item.id,
+          task: item.task,
+          category: item.category,
+          week: item.week,
+          trimester: item.trimester,
+          frequency: item.frequency,
+          important: item.important,
+          personalized: item.personalized,
+          generatedAt: item.date
+        }));
+      }
+
+      // If no cached items exist, generate new ones
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
@@ -96,10 +135,44 @@ class DailyChecklist {
       // Parse the JSON response
       const checklistData = JSON.parse(jsonText);
       
+      // Calculate expiration (end of today)
+      const now = new Date();
+      const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      endOfToday.setHours(23, 59, 59, 999);
+
+      // Save checklist items to database for caching
+      const savedItems = [];
+      for (const itemData of checklistData) {
+        if (itemData.task && itemData.category) {
+          const saved = await prisma.dailyChecklistItem.create({
+            data: {
+              userId: targetUserId,
+              task: itemData.task,
+              category: itemData.category,
+              week: itemData.week || null,
+              trimester: itemData.trimester || null,
+              frequency: itemData.frequency || 'daily',
+              important: itemData.important || false,
+              personalized: itemData.personalized || false,
+              date: targetDate,
+              expiresAt: endOfToday
+            }
+          });
+          savedItems.push(saved);
+        }
+      }
+
       // Convert to DailyChecklist objects
-      const checklist = checklistData.map(item => new DailyChecklist({
-        ...item,
-        generatedAt: date
+      const checklist = savedItems.map(item => new DailyChecklist({
+        id: item.id,
+        task: item.task,
+        category: item.category,
+        week: item.week,
+        trimester: item.trimester,
+        frequency: item.frequency,
+        important: item.important,
+        personalized: item.personalized,
+        generatedAt: item.date
       }));
 
       return checklist;

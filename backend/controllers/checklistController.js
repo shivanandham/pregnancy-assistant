@@ -103,8 +103,8 @@ class ChecklistController {
         where: { userId }
       });
       
-      // Generate dynamic checklist for today
-      const checklist = await DailyChecklist.generateDynamicChecklist(pregnancy, userProfile, new Date());
+      // Generate dynamic checklist for today (pass userId for caching)
+      const checklist = await DailyChecklist.generateDynamicChecklist(pregnancy, userProfile, new Date(), userId);
       const checklistByCategory = ChecklistController._groupChecklistByCategory(checklist);
       
       res.json({

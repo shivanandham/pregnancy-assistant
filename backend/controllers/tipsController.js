@@ -56,20 +56,14 @@ class TipsController {
 
       const currentWeek = TipsController.calculateCurrentWeek(pregnancy.lastMenstrualPeriod);
       
-      const tips = await prisma.pregnancyTip.findMany({
-        where: {
-          week: currentWeek
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      });
+      // Use the model method which generates tips if they don't exist
+      const tips = await PregnancyTip.getTipsForWeek(currentWeek);
       
       res.json({
         success: true,
         data: {
           currentWeek: currentWeek,
-          tips: tips
+          tips: tips.map(tip => tip.toJSON())
         }
       });
     } catch (error) {

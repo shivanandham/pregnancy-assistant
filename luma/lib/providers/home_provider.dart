@@ -88,12 +88,16 @@ class HomeProvider with ChangeNotifier {
       final homeData = await ApiService.getHomeData();
       if (homeData == null) {
         _error = 'Failed to load home data';
+        _isLoading = false;
+        notifyListeners();
         return;
       }
 
       // If no pregnancy data, just set the basic info
       if (!homeData.hasPregnancyData) {
         _homeData = homeData;
+        _isLoading = false;
+        notifyListeners();
         return;
       }
 
