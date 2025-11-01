@@ -208,19 +208,17 @@ nano /etc/caddy/Caddyfile
 ### Add Caddy configuration:
 ```
 lumacare.in {
-    # Route API requests to backend (must come first for proper matching)
-    handle /api/* {
-        reverse_proxy localhost:3000 {
-            header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Forwarded-Proto {scheme}
-        }
-    }
+	handle /api/* {
+		reverse_proxy localhost:3000 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
 
-    # Serve landing page files directly from repository
-    root * /var/www/pregnancy-assistant/landing_page
-    file_server
-    try_files {path} /index.html
+	handle {
+		root * /var/www/pregnancy-assistant/landing_page
+		try_files {path} /index.html
+		file_server
+	}
 }
 ```
 
@@ -228,6 +226,13 @@ lumacare.in {
 ```bash
 caddy validate --config /etc/caddy/Caddyfile
 ```
+
+### Format Caddyfile (optional but recommended):
+```bash
+caddy fmt --overwrite /etc/caddy/Caddyfile
+```
+
+This will clean up formatting and remove unnecessary directives.
 
 ### Enable and start Caddy:
 ```bash
