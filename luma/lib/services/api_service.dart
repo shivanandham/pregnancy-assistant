@@ -689,8 +689,8 @@ class ApiService {
     }
   }
 
-  // Get milestones for current week
-  static Future<Map<String, List<PregnancyMilestone>>> getCurrentWeekMilestones() async {
+  // Get milestones for current week (includes weekly content)
+  static Future<Map<String, dynamic>> getCurrentWeekMilestones() async {
     try {
       final response = await AuthenticatedHttpClient.get('/api/milestones/current');
 
@@ -699,19 +699,21 @@ class ApiService {
         if (data['success'] == true) {
           final milestonesData = data['data'];
           return {
-            'current': (milestonesData['current'] as List<dynamic>)
+            'current': (milestonesData['milestones']['current'] as List<dynamic>)
                 .map((milestone) => PregnancyMilestone.fromJson(milestone))
                 .toList(),
-            'upcoming': (milestonesData['upcoming'] as List<dynamic>)
+            'upcoming': (milestonesData['milestones']['upcoming'] as List<dynamic>)
                 .map((milestone) => PregnancyMilestone.fromJson(milestone))
                 .toList(),
+            'weeklyContent': milestonesData['weeklyContent'],
+            'currentWeek': milestonesData['currentWeek'],
           };
         }
       }
-      return {'current': [], 'upcoming': []};
+      return {'current': [], 'upcoming': [], 'weeklyContent': null, 'currentWeek': 0};
     } catch (e) {
       print('Error getting current week milestones: $e');
-      return {'current': [], 'upcoming': []};
+      return {'current': [], 'upcoming': [], 'weeklyContent': null, 'currentWeek': 0};
     }
   }
 

@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const PregnancyMilestone = require('../models/PregnancyMilestone');
+const WeeklyContent = require('../models/WeeklyContent');
 
 class MilestonesController {
   // Get milestones for a specific week
@@ -58,12 +59,18 @@ class MilestonesController {
       const currentMilestones = PregnancyMilestone.getMilestonesForWeek(currentWeek);
       const upcomingMilestones = PregnancyMilestone.getUpcomingMilestones(currentWeek, 2);
       
+      // Get or generate weekly content for this week
+      const weeklyContent = await WeeklyContent.getContentForWeek(userId, currentWeek);
+      
       res.json({
         success: true,
         data: {
           currentWeek: currentWeek,
-          current: currentMilestones.map(milestone => milestone.toJSON()),
-          upcoming: upcomingMilestones.map(milestone => milestone.toJSON())
+          milestones: {
+            current: currentMilestones.map(milestone => milestone.toJSON()),
+            upcoming: upcomingMilestones.map(milestone => milestone.toJSON())
+          },
+          weeklyContent: weeklyContent ? weeklyContent.toJSON() : null
         }
       });
     } catch (error) {

@@ -8,6 +8,7 @@ import '../models/pregnancy_tip.dart';
 import '../models/pregnancy_milestone.dart';
 import '../models/daily_checklist.dart';
 import '../models/pregnancy.dart';
+import '../models/weekly_content.dart';
 import '../services/device_timezone_service.dart';
 import '../services/api_service.dart';
 import '../widgets/skeleton_loader.dart';
@@ -359,9 +360,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                               ),
                             )
-                          : homeProvider.currentMilestones.isNotEmpty
-                              ? _buildWeekMilestones(homeProvider.currentMilestones)
-                              : const SizedBox.shrink(),
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (homeProvider.currentMilestones.isNotEmpty)
+                                  _buildWeekMilestones(homeProvider.currentMilestones),
+                                if (homeProvider.currentMilestones.isNotEmpty && homeProvider.weeklyContent != null)
+                                  const SizedBox(height: 16),
+                                if (homeProvider.weeklyContent != null)
+                                  _buildWeeklyContent(homeProvider.weeklyContent!),
+                              ],
+                            ),
                 ),
                 const SliverToBoxAdapter(
                   child: SizedBox(height: 20),
@@ -708,6 +717,107 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildWeeklyContent(WeeklyContent content) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (content.title != null) ...[
+            Text(
+              content.title!,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (content.highlights.isNotEmpty) ...[
+            ...content.highlights.take(3).map((highlight) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.celebration,
+                    size: 16,
+                    color: AppTheme.primaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      highlight,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            )),
+            const SizedBox(height: 12),
+          ],
+          if (content.facts.isNotEmpty) ...[
+            ...content.facts.take(2).map((fact) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.lightbulb_outline,
+                    size: 16,
+                    color: AppTheme.primaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      fact,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            )),
+          ],
+          if (content.thingsToDo.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ...content.thingsToDo.take(2).map((todo) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 16,
+                    color: AppTheme.primaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      todo,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            )),
+          ],
+        ],
+      ),
     );
   }
 

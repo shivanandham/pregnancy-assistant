@@ -3,6 +3,7 @@ import '../models/home_data.dart';
 import '../models/pregnancy_tip.dart';
 import '../models/pregnancy_milestone.dart';
 import '../models/daily_checklist.dart';
+import '../models/weekly_content.dart';
 import '../services/api_service.dart';
 
 /// HomeProvider with separate loading states for different components
@@ -75,6 +76,7 @@ class HomeProvider with ChangeNotifier {
   List<PregnancyMilestone> get upcomingMilestones => _homeData?.upcomingMilestones ?? [];
   List<DailyChecklist> get checklist => _homeData?.checklist ?? [];
   Map<String, List<DailyChecklist>> get checklistByCategory => _homeData?.checklistByCategory ?? {};
+  WeeklyContent? get weeklyContent => _homeData?.weeklyContent;
   bool get hasPregnancyData => _homeData?.hasPregnancyData ?? false;
   int get currentWeek => _homeData?.currentWeek ?? 0;
 
@@ -156,9 +158,14 @@ class HomeProvider with ChangeNotifier {
 
     try {
       final milestonesData = await ApiService.getCurrentWeekMilestones();
+      WeeklyContent? weeklyContent;
+      if (milestonesData['weeklyContent'] != null) {
+        weeklyContent = WeeklyContent.fromJson(milestonesData['weeklyContent']);
+      }
       _homeData = _homeData?.copyWith(
         currentMilestones: milestonesData['current'] ?? [],
         upcomingMilestones: milestonesData['upcoming'] ?? [],
+        weeklyContent: weeklyContent,
       );
     } catch (e) {
       _milestonesError = 'Failed to load milestones: $e';

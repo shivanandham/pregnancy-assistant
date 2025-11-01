@@ -2,6 +2,7 @@ import 'pregnancy_tip.dart';
 import 'pregnancy_milestone.dart';
 import 'daily_checklist.dart';
 import 'pregnancy.dart';
+import 'weekly_content.dart';
 
 class HomeData {
   final bool hasPregnancyData;
@@ -12,6 +13,7 @@ class HomeData {
   final List<PregnancyMilestone> upcomingMilestones;
   final List<DailyChecklist> checklist;
   final Map<String, List<DailyChecklist>> checklistByCategory;
+  final WeeklyContent? weeklyContent;
   final String? message;
 
   HomeData({
@@ -23,6 +25,7 @@ class HomeData {
     required this.upcomingMilestones,
     required this.checklist,
     required this.checklistByCategory,
+    this.weeklyContent,
     this.message,
   });
 
@@ -44,6 +47,9 @@ class HomeData {
           ?.map((task) => DailyChecklist.fromJson(task))
           .toList() ?? [],
       checklistByCategory: _parseChecklistByCategory(json['checklistByCategory']),
+      weeklyContent: json['weeklyContent'] != null 
+          ? WeeklyContent.fromJson(json['weeklyContent'])
+          : null,
       message: json['message'],
     );
   }
@@ -73,6 +79,7 @@ class HomeData {
       'checklistByCategory': checklistByCategory.map(
         (category, tasks) => MapEntry(category, tasks.map((task) => task.toJson()).toList())
       ),
+      'weeklyContent': weeklyContent?.toJson(),
       'message': message,
     };
   }
@@ -86,6 +93,7 @@ class HomeData {
     List<PregnancyMilestone>? upcomingMilestones,
     List<DailyChecklist>? checklist,
     Map<String, List<DailyChecklist>>? checklistByCategory,
+    WeeklyContent? weeklyContent,
     String? message,
   }) {
     return HomeData(
@@ -97,6 +105,7 @@ class HomeData {
       upcomingMilestones: upcomingMilestones ?? this.upcomingMilestones,
       checklist: checklist ?? this.checklist,
       checklistByCategory: checklistByCategory ?? this.checklistByCategory,
+      weeklyContent: weeklyContent ?? this.weeklyContent,
       message: message ?? this.message,
     );
   }
