@@ -19,7 +19,10 @@ alwaysApply: false
 - ChatSession/ChatMessage: AI conversation management with diagnostic support
 - Symptom/Appointment/WeightEntry: Health tracking data
 - KnowledgeFact/ConversationChunk: Extracted knowledge and searchable conversations
-- PregnancyTip/ChecklistCompletion: Tips and daily task tracking
+- PregnancyTip: Weekly tips with expiration dates (cached for 7 days)
+- DailyChecklistItem: User-specific daily checklist items (cached per day until midnight)
+- WeeklyContent: Week-specific content with highlights, facts, and things to do (cached per user per week)
+- ChecklistCompletion: Daily task completion tracking
 
 ## Environment Configuration
 - **Development**: Local laptop (NODE_ENV=development)
@@ -40,6 +43,14 @@ alwaysApply: false
 - Use pregnancy-specific context with current week information
 - Implement diagnostic questioning for symptom assessment
 - Extract and store knowledge from conversations for future reference
+- Generate personalized content using Gemini 2.5 Flash for tips, checklists, and weekly content
+- Cache AI-generated content to reduce API calls and costs (tips: 7 days, checklists: daily, weekly content: per week)
+
+## Content Caching Strategy
+- **Pregnancy Tips**: Cached per week, expires after 7 days. Uses `PregnancyTip.getTipsForWeek()` which checks for existing tips before generating.
+- **Daily Checklist**: Cached per user per day, expires at midnight. Uses `DailyChecklist.generateDynamicChecklist()` which checks for existing items before generating.
+- **Weekly Content**: Cached per user per week, expires after 7 days. Uses `WeeklyContent.getContentForWeek()` which generates highlights, facts, and things to do using Gemini.
+- **Caching Logic**: All cached content checks expiration before returning, regenerates only when expired or missing
 
 ## Authentication & Security
 - **Custom Session Token System**: Separates Firebase identity from session management

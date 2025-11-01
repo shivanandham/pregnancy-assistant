@@ -9,6 +9,7 @@ alwaysApply: false
 - Key screens: HomeScreen (dashboard), ChatbotScreen, TrackerScreen, CalendarScreen, UserProfileScreen, LoginScreen
 - UI: Material Design 3 with pregnancy-themed color palette, responsive design
 - Authentication: Custom session token system with Firebase Auth for identity verification
+- Models: Pregnancy, PregnancyTip, PregnancyMilestone, DailyChecklist, WeeklyContent, UserProfile, Symptom, Appointment, WeightEntry
 
 ## Common Commands
 - Flutter: `flutter pub get`, `flutter run`, `flutter build apk`
@@ -23,6 +24,8 @@ alwaysApply: false
 ## State Management
 - Use Provider pattern for all state management
 - Implement proper error handling and loading states
+- **HomeProvider**: Separate loading states for tips, milestones, and checklist components
+- **Loading State Management**: Set `isLoading = false` when data loads successfully or fails, especially for empty states (e.g., no pregnancy data)
 - Optimize for performance with appropriate widget rebuilding
 - Handle offline scenarios gracefully
 
@@ -31,6 +34,8 @@ alwaysApply: false
 - Visual progress indicators with trimester-specific colors
 - Context-aware AI responses based on current pregnancy week
 - Health tracking with appropriate medical disclaimers
+- **Weekly Content Display**: "This Week" section shows milestones when available, or AI-generated weekly content (highlights, facts, things to do) when no milestones exist
+- **Home Screen Sections**: Today's Focus (tips carousel), This Week (milestones/weekly content), Daily Checklist (personalized tasks)
 
 ## Authentication & User Management
 - **Custom Session Token System**: Uses custom JWT session tokens (not Firebase tokens) for API authentication

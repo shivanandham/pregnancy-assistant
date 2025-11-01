@@ -52,11 +52,19 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Secure logout functionality** with confirmation dialogs
 
 ### 5. Knowledge Management System
-- **Pregnancy tips database** categorized by week, trimester, and topic
+- **Pregnancy tips database** categorized by week, trimester, and topic (cached per week)
 - **Milestone tracking** with important events and developmental stages
+- **Weekly content generation** for weeks without milestones (highlights, facts, things to do)
 - **Automatic fact extraction** from AI conversations using Gemini
 - **Conversation chunking** for search and retrieval capabilities
 - **Knowledge categorization** (symptom, milestone, preference, medical, activity)
+
+### 6. Content Generation & Caching System
+- **AI-Generated Tips**: Personalized pregnancy tips per week using Gemini (cached for 7 days)
+- **AI-Generated Checklists**: Daily personalized checklists based on pregnancy week and user profile (cached per day until midnight)
+- **AI-Generated Weekly Content**: Week-specific highlights, facts, and actionable items when no milestones exist (cached per user per week)
+- **Caching Strategy**: All AI-generated content is cached to reduce API calls and costs
+- **Expiration Logic**: Tips (7 days), Checklists (end of day), Weekly Content (7 days or end of week)
 
 ## Technical Architecture Details
 
@@ -71,7 +79,9 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **WeightEntry**: Weight tracking with timestamps and notes
 - **KnowledgeFact**: Extracted knowledge from conversations with categorization
 - **ConversationChunk**: Searchable conversation segments with keywords
-- **PregnancyTip**: Weekly tips and advice with expiration dates
+- **PregnancyTip**: Weekly tips and advice with expiration dates (cached per week for 7 days)
+- **DailyChecklistItem**: User-specific daily checklist items generated with AI (cached per day until midnight)
+- **WeeklyContent**: Week-specific content with highlights, facts, and actionable items (cached per user per week for 7 days)
 - **ChecklistCompletion**: Daily task completion tracking
 
 ### API Architecture
@@ -93,6 +103,8 @@ Luma is a comprehensive pregnancy tracking and AI assistant app designed to supp
 - **Diagnostic questioning system** for symptom assessment
 - **Knowledge extraction pipeline** for conversation analysis
 - **Symptom detection** from natural language input
+- **Content Generation**: Tips, checklists, and weekly content generated with Gemini and cached appropriately
+- **Caching Layer**: All AI-generated content cached in database to reduce API calls and ensure consistency
 
 ## Development Guidelines & Standards
 
@@ -244,7 +256,10 @@ See `backend/prisma/MIGRATION_RULES.md` and `.cursorrules` for complete migratio
 - **AuthenticatedHttpClient**: Automatic token injection and 401 error handling
 - **Reactive Token Refresh**: Token refresh on expiration or 401 errors (not proactive)
 - **Authentication state management** with automatic token refresh and logout on revocation
+- **HomeProvider Loading States**: Separate loading states for tips, milestones, and checklist with proper error handling
+- **Empty State Handling**: Properly handle empty states (no pregnancy data, no milestones) by setting loading=false
 - **Error handling** with user-friendly messages and retry mechanisms
+- **Weekly Content Display**: Home screen "This Week" section displays milestones when available, or AI-generated weekly content when no milestones exist
 
 ### Backend Performance
 - **Database indexing** on frequently queried fields
@@ -258,8 +273,10 @@ See `backend/prisma/MIGRATION_RULES.md` and `.cursorrules` for complete migratio
 ### AI Service Optimization
 - **Context optimization** for efficient prompt engineering
 - **Response caching** for common queries
+- **Content Caching**: Tips (7 days), Checklists (daily), Weekly Content (per week) - reduces API calls significantly
 - **Error handling** with fallback responses
 - **Rate limiting** for AI API calls
-- **Cost optimization** with efficient token usage
+- **Cost optimization** with efficient token usage and aggressive caching
+- **Generation Strategy**: Check cache before generating, only generate when content is missing or expired
 
 When working on this project, always prioritize user safety, medical accuracy, and pregnancy-specific considerations. Maintain appropriate medical disclaimers and encourage professional healthcare consultation for medical concerns.
