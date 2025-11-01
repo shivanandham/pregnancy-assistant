@@ -84,9 +84,6 @@ macos/Flutter/GeneratedPluginRegistrant.swift
 # Web
 web/
 
-# Test files
-test-*.js
-
 # IDE
 .vscode/
 .idea/
