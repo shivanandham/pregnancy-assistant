@@ -7,6 +7,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
+const String _installerChannel = 'com.luma.luma/installer';
+
 class DownloadResult {
   final bool success;
   final String? error;
@@ -228,7 +230,7 @@ class UpdateManager {
     }
   }
 
-  /// Install APK file
+  /// Install APK file (only for current user on multi-user devices)
   static Future<DownloadResult> _installApk(String filePath) async {
     try {
       if (!Platform.isAndroid) {
@@ -246,9 +248,43 @@ class UpdateManager {
         );
       }
 
-      // Use url_launcher with FileProvider
+      // Use platform channel to install via PackageInstaller API
+      // This ensures installation only for the current user/profile
+      try {
+        const platform = MethodChannel(_installerChannel);
+        final result = await platform.invokeMethod<bool>(
+          'installApk',
+          {'filePath': filePath},
+        );
+
+        if (result == true) {
+          // Give the installer a moment to start, then return success
+          await Future.delayed(const Duration(milliseconds: 1000));
+          return DownloadResult(success: true);
+        } else {
+          return DownloadResult(
+            success: false,
+            error: 'Installation was cancelled or failed',
+          );
+        }
+      } on PlatformException catch (e) {
+        // Fallback to url_launcher if platform channel fails
+        debugPrint('Platform channel installation failed, falling back to url_launcher: $e');
+        return await _installApkFallback(filePath);
+      }
+    } catch (e) {
+      return DownloadResult(
+        success: false,
+        error: 'Installation error: $e',
+      );
+    }
+  }
+
+  /// Fallback installation method using url_launcher
+  static Future<DownloadResult> _installApkFallback(String filePath) async {
+    try {
       final packageName = 'com.luma.luma';
-      final fileName = file.path.split('/').last;
+      final fileName = filePath.split('/').last;
       final uri = Uri.parse('content://$packageName.fileprovider/luma_updates/$fileName');
       
       final launched = await launchUrl(
@@ -257,7 +293,6 @@ class UpdateManager {
       );
 
       if (launched) {
-        // Give the installer a moment to start, then return success
         await Future.delayed(const Duration(milliseconds: 1000));
         return DownloadResult(success: true);
       } else {
@@ -269,7 +304,7 @@ class UpdateManager {
     } catch (e) {
       return DownloadResult(
         success: false,
-        error: 'Installation error: $e',
+        error: 'Fallback installation error: $e',
       );
     }
   }
