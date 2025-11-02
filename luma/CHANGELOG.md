@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0+13] - 2025-11-02 12:36:22
+
+### major
+- Automated version bump
+
 ## [1.1.8+12] - 2025-11-02 05:21:54
 
 ### patch
