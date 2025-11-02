@@ -37,7 +37,12 @@ jobs:
     - name: Build APK
       run: |
         cd luma
-        flutter build apk --release
+        if [ -n "${{ secrets.BACKEND_URL_PROD }}" ]; then
+          flutter build apk --release \
+            --dart-define=BACKEND_URL_PROD=${{ secrets.BACKEND_URL_PROD }}
+        else
+          flutter build apk --release
+        fi
         # Rename APK to luma.apk
         mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/luma.apk
         

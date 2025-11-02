@@ -101,11 +101,19 @@ build_apk() {
         exit 1
     fi
     
-    # Build APK
+    # Build APK with optional BACKEND_URL_PROD dart-define
     echo -e "${YELLOW}Building APK...${NC}"
-    if ! flutter build apk --release; then
-        echo -e "${RED}APK build failed${NC}"
-        exit 1
+    if [ -n "$BACKEND_URL_PROD" ]; then
+        echo -e "${BLUE}Using BACKEND_URL_PROD: $BACKEND_URL_PROD${NC}"
+        if ! flutter build apk --release --dart-define=BACKEND_URL_PROD="$BACKEND_URL_PROD"; then
+            echo -e "${RED}APK build failed${NC}"
+            exit 1
+        fi
+    else
+        if ! flutter build apk --release; then
+            echo -e "${RED}APK build failed${NC}"
+            exit 1
+        fi
     fi
     
     cd "$PROJECT_DIR"
