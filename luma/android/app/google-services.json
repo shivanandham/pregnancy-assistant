@@ -7,7 +7,7 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:607143667861:android:2c95474d84e8182ce3d39c",
+        "mobilesdk_app_id": "1:607143667861:android:0bb01c67d07737cde3d39c",
         "android_client_info": {
           "package_name": "com.luma.luma"
         }
@@ -19,6 +19,14 @@
           "android_info": {
             "package_name": "com.luma.luma",
             "certificate_hash": "7ac4a158a0d937dde9f9ac3a37ecc22884b9b392"
+          }
+        },
+        {
+          "client_id": "607143667861-seruil6lbh8c80ius4m20ekfa9pj6b3j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.luma.luma",
+            "certificate_hash": "a74b78cd1218b241b560bbfa680ed7fc810e7213"
           }
         },
         {

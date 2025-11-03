@@ -12,6 +12,7 @@ class AuthService {
   // Web Client ID: 607143667861-9j0e1tf0vj3qjb6v65rltr9i7qd1vuk5.apps.googleusercontent.com
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
+    serverClientId: '607143667861-9j0e1tf0vj3qjb6v65rltr9i7qd1vuk5.apps.googleusercontent.com',
   );
   
   // Storage keys

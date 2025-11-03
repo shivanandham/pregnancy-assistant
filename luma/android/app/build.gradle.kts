@@ -7,6 +7,17 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+import java.util.Properties
+
+// Load keystore properties
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use {
+        keystoreProperties.load(it)
+    }
+}
+
 android {
     namespace = "com.luma.luma"
     compileSdk = flutter.compileSdkVersion
@@ -33,11 +44,26 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                val storeFilePath = keystoreProperties["storeFile"] as String
+                storeFile = file(storeFilePath)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                // Fallback to debug for local development if keystore doesn't exist
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }

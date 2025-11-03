@@ -47,3 +47,7 @@ app.*.map.json
 # Firebase/Google Services configuration files (secrets)
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+
+# Android Keystore files (secrets - never commit)
+android/app/*.keystore
+android/key.properties

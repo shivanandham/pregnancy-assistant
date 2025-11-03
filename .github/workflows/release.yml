@@ -34,15 +34,33 @@ jobs:
         cd luma
         flutter pub get
         
+    - name: Setup Android Keystore
+      env:
+        KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      run: |
+        cd luma/android
+        # Decode and create keystore file
+        if [ -n "$KEYSTORE_BASE64" ]; then
+          echo "$KEYSTORE_BASE64" | base64 -d > app/release.keystore
+          # Create key.properties file
+          cat > key.properties <<EOF
+        storePassword=$KEYSTORE_PASSWORD
+        keyPassword=$KEY_PASSWORD
+        keyAlias=$KEY_ALIAS
+        storeFile=release.keystore
+        EOF
+          echo "✅ Keystore configured"
+        else
+          echo "⚠️ No keystore secret found, build will use debug signing"
+        fi
+        
     - name: Build APK
       run: |
         cd luma
-        if [ -n "${{ secrets.BACKEND_URL_PROD }}" ]; then
-          flutter build apk --release \
-            --dart-define=BACKEND_URL_PROD=${{ secrets.BACKEND_URL_PROD }}
-        else
-          flutter build apk --release
-        fi
+        flutter build apk --release
         # Rename APK to luma.apk
         mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/luma.apk
         
