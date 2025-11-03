@@ -1,243 +1,233 @@
 # Environment Configuration Guide
 
-This guide explains how to set up separate Firebase projects for development and production environments.
+This guide explains the current Firebase configuration setup for the Luma Pregnancy Assistant app.
 
 ## 🏗️ **Architecture Overview**
 
-### **Development Environment**
-- **Flutter App**: Uses `luma-pregnancy-assistant-dev` Firebase project
-- **Backend**: Uses development Firebase project credentials
-- **Database**: Local PostgreSQL
-- **Backend URL**: `http://localhost:3000`
+### **Current Setup**
+- **Flutter App**: Uses a single Firebase project (`luma-pregnancy-assistant`) for all environments
+- **Backend**: Uses the same Firebase project for authentication
+- **Configuration Files**: Fixed location - no environment-based switching
 
-### **Production Environment**
-- **Flutter App**: Uses `luma-pregnancy-assistant-prod` Firebase project
-- **Backend**: Uses production Firebase project credentials
-- **Database**: Self-hosted PostgreSQL on DigitalOcean
-- **Backend URL**: `https://your-production-backend.com`
+### **Firebase Project**
+- **Project Name**: `luma-pregnancy-assistant`
+- **Project ID**: `luma-pregnancy-assistant`
+- **Used for**: Both development and production builds
 
 ## 🔧 **Firebase Project Setup**
 
-### **Step 1: Create Development Firebase Project**
+### **Step 1: Firebase Project Configuration**
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Click "Create a project"
-3. Project name: `luma-pregnancy-assistant-dev`
-4. Enable Google Analytics (optional)
-5. Enable Google Sign-in authentication
-6. Download configuration files:
-   - Android: `google-services-dev.json`
-   - iOS: `GoogleService-Info-dev.plist`
+2. Select project: `luma-pregnancy-assistant`
+3. Ensure Google Sign-in authentication is enabled
+4. Configure Android app with package name: `com.luma.luma`
+5. Configure iOS app with bundle ID: `com.luma.luma`
 
-### **Step 2: Create Production Firebase Project**
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Click "Create a project"
-3. Project name: `luma-pregnancy-assistant-prod`
-4. Enable Google Analytics (optional)
-5. Enable Google Sign-in authentication
-6. Download configuration files:
-   - Android: `google-services-prod.json`
-   - iOS: `GoogleService-Info-prod.plist`
+### **Step 2: Add SHA Fingerprints (Android)**
+1. Get your debug keystore SHA-1 and SHA-256 fingerprints:
+   ```bash
+   keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+   ```
+2. Go to Firebase Console → Project Settings → Your apps → Android app
+3. Click "Add fingerprint"
+4. Add both SHA-1 and SHA-256 fingerprints
+5. Download the updated `google-services.json`
 
-### **Step 3: Generate Service Account Keys**
-For each Firebase project:
+### **Step 3: Download Configuration Files**
+1. **Android**: Download `google-services.json` from Firebase Console
+2. **iOS**: Download `GoogleService-Info.plist` from Firebase Console
+3. Place files in fixed locations:
+   - Android: `luma/android/app/google-services.json`
+   - iOS: `luma/ios/Runner/GoogleService-Info.plist`
 
-1. Go to Project Settings → Service Accounts
-2. Click "Generate new private key"
-3. Download the JSON file
-4. Extract the following values:
-   - `project_id`
-   - `private_key`
-   - `client_email`
+**⚠️ Important**: These files are gitignored (secrets) and must be manually placed in the correct locations.
 
 ## 📱 **Flutter Configuration**
 
-### **Environment Detection**
-The Flutter app automatically detects the environment:
-- **Debug Mode** (`kDebugMode = true`): Development environment
-- **Release Mode** (`kReleaseMode = true`): Production environment
-
 ### **Configuration Files**
-Place the Firebase configuration files in the correct locations:
+The app uses a single fixed configuration file for each platform:
 
-#### **Development Files:**
+#### **Android:**
 ```
-luma/android/app/google-services-dev.json
-luma/ios/Runner/GoogleService-Info-dev.plist
+luma/android/app/google-services.json
 ```
 
-#### **Production Files:**
+#### **iOS:**
 ```
-luma/android/app/google-services-prod.json
-luma/ios/Runner/GoogleService-Info-prod.plist
+luma/ios/Runner/GoogleService-Info.plist
+```
+
+### **Firebase Configuration in Code**
+The Flutter app uses `FirebaseConfig` class for Firebase project configuration:
+
+```dart
+// Located in luma/lib/config/firebase_config.dart
+class FirebaseConfig {
+  static String get projectId => 'luma-pregnancy-assistant';
+  // Single project for all environments
+}
 ```
 
 ### **Build Configuration**
-The app will automatically use the correct configuration based on the build mode:
+All builds (debug and release) use the same Firebase configuration files:
 
 ```bash
-# Development build (uses dev Firebase project)
+# Debug build
 flutter run
 
-# Production build (uses prod Firebase project)
+# Release build
 flutter build apk --release
 flutter build ios --release
 ```
 
+Both builds use the same `google-services.json` and `GoogleService-Info.plist` files.
+
 ## 🖥️ **Backend Configuration**
 
 ### **Environment Variables**
-Update your `.env` file with both development and production Firebase credentials:
+The backend uses Firebase Admin SDK with environment-specific credentials if needed:
 
 ```bash
-# Development Firebase Configuration
-FIREBASE_PROJECT_ID_DEV=luma-pregnancy-assistant-dev
-FIREBASE_PRIVATE_KEY_DEV="-----BEGIN PRIVATE KEY-----\nyour_dev_private_key_here\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL_DEV=firebase-adminsdk-xxxxx@luma-pregnancy-assistant-dev.iam.gserviceaccount.com
-
-# Production Firebase Configuration
-FIREBASE_PROJECT_ID_PROD=luma-pregnancy-assistant-prod
-FIREBASE_PRIVATE_KEY_PROD="-----BEGIN PRIVATE KEY-----\nyour_prod_private_key_here\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL_PROD=firebase-adminsdk-xxxxx@luma-pregnancy-assistant-prod.iam.gserviceaccount.com
-
-# Environment
-NODE_ENV=development  # or 'production'
+# Firebase Configuration (if using service account)
+FIREBASE_PROJECT_ID=luma-pregnancy-assistant
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@luma-pregnancy-assistant.iam.gserviceaccount.com
 ```
 
-### **Automatic Project Selection**
-The backend automatically selects the correct Firebase project based on `NODE_ENV`:
-
-```javascript
-// In middleware/auth.js
-const isDevelopment = process.env.NODE_ENV === 'development';
-
-const serviceAccount = {
-  projectId: isDevelopment 
-    ? process.env.FIREBASE_PROJECT_ID_DEV 
-    : process.env.FIREBASE_PROJECT_ID_PROD,
-  // ... other config
-};
-```
+### **Backend Authentication**
+The backend validates Firebase ID tokens from the app using the same Firebase project.
 
 ## 🧪 **Testing**
 
 ### **Development Testing**
 ```bash
 # Backend in development mode
-NODE_ENV=development npm run dev
+npm run dev
 
 # Flutter app in debug mode
 flutter run
-
-# Result: Uses dev Firebase project + local database
 ```
 
 ### **Production Testing**
 ```bash
 # Backend in production mode
-NODE_ENV=production npm start
+npm start
 
 # Flutter app in release mode
 flutter build apk --release
-
-# Result: Uses prod Firebase project + production database
 ```
+
+Both environments use the same Firebase project, but authentication is still secure and validated.
 
 ## 🔍 **Verification**
 
-### **Check Environment in Flutter**
-The app logs the current environment on startup:
-```
-🔧 Firebase Environment: DEVELOPMENT
-🔧 Firebase Project ID: luma-pregnancy-assistant-dev
-🔧 Backend URL: http://localhost:3000
+### **Check Configuration Files**
+Verify that configuration files are in the correct locations:
+
+```bash
+# Check Android config
+ls -la luma/android/app/google-services.json
+
+# Check iOS config
+ls -la luma/ios/Runner/GoogleService-Info.plist
 ```
 
-### **Check Environment in Backend**
-The backend logs the Firebase project on startup:
-```
-🔧 Firebase Admin SDK initialized for DEVELOPMENT project: luma-pregnancy-assistant-dev
-```
+### **Check Firebase Connection**
+1. Run the app: `flutter run`
+2. Try Google Sign-In
+3. Verify user appears in Firebase Console → Authentication
 
-### **Test User Isolation**
-1. Create a user in development environment
-2. Check Firebase Console → Authentication
-3. User should appear in `luma-pregnancy-assistant-dev` project
-4. User should NOT appear in `luma-pregnancy-assistant-prod` project
+### **Check SHA Fingerprints**
+If Google Sign-In fails with error code 10:
+1. Get your current SHA fingerprints
+2. Verify they're added in Firebase Console
+3. Download updated `google-services.json`
+4. Rebuild the app
+
+See `luma/GOOGLE_SIGNIN_FIX.md` for detailed troubleshooting.
 
 ## 🚨 **Important Notes**
 
 ### **Security**
-- **Never commit** Firebase service account keys to version control
-- **Use environment variables** for all sensitive configuration
-- **Separate projects** ensure test users don't affect production
+- **Never commit** `google-services.json` or `GoogleService-Info.plist` to version control
+- These files contain sensitive API keys and are gitignored
+- Keep these files secure and don't share them publicly
 
-### **Data Isolation**
-- **Development users** are completely isolated from production users
-- **Development database** is separate from production database
-- **No cross-contamination** between environments
+### **Configuration Updates**
+- If you need to update Firebase configuration, download new files from Firebase Console
+- Replace the files in their fixed locations
+- Clean and rebuild the app after updating:
+  ```bash
+  flutter clean
+  flutter pub get
+  flutter run
+  ```
 
-### **Deployment**
-- **Development**: Deploy to local machine or development server
-- **Production**: Deploy to DigitalOcean with production environment variables
-- **Environment variables** must be set correctly for each deployment
+### **SHA Fingerprint Updates**
+- When adding new devices or keystores, add their SHA fingerprints to Firebase Console
+- Download updated `google-services.json` after adding fingerprints
+- This is especially important for release builds with different keystores
 
 ## 🛠️ **Troubleshooting**
 
 ### **Common Issues**
 
-#### **"Firebase project not found"**
-- Check that the correct Firebase project ID is set in environment variables
-- Verify the service account has access to the project
+#### **"Google Sign-In Error Code 10"**
+- SHA fingerprint mismatch
+- See `luma/GOOGLE_SIGNIN_FIX.md` for detailed steps
+- Get your SHA fingerprints and add them to Firebase Console
 
-#### **"Invalid private key"**
-- Ensure the private key is properly formatted with `\n` characters
-- Check that the private key is not truncated
+#### **"Firebase configuration file not found"**
+- Verify `google-services.json` is in `luma/android/app/`
+- Verify `GoogleService-Info.plist` is in `luma/ios/Runner/`
+- Check that files are not gitignored locally
 
-#### **"Authentication failed"**
-- Verify that Google Sign-in is enabled in Firebase Console
-- Check that the correct OAuth client is configured
+#### **"Invalid Firebase project"**
+- Verify the project ID matches: `luma-pregnancy-assistant`
+- Check that configuration files are from the correct Firebase project
+- Ensure package name matches: `com.luma.luma`
 
-#### **"Wrong environment detected"**
-- For Flutter: Check if you're running in debug vs release mode
-- For Backend: Check the `NODE_ENV` environment variable
+#### **"Configuration file out of date"**
+- Download fresh configuration files from Firebase Console
+- Replace existing files
+- Clean and rebuild the app
 
 ### **Debug Commands**
 ```bash
-# Check Flutter environment
+# Get SHA fingerprints
+cd luma
+./scripts/get-sha-fingerprints.sh
+
+# Clean and rebuild
+flutter clean
+flutter pub get
+flutter run
+
+# Check Firebase connection
 flutter run --verbose
-
-# Check Backend environment
-NODE_ENV=development npm run dev
-
-# Test Firebase connection
-npm run test:auth
 ```
 
 ## 📋 **Checklist**
 
-### **Development Setup**
-- [ ] Create `luma-pregnancy-assistant-dev` Firebase project
-- [ ] Enable Google Sign-in in development project
-- [ ] Download development configuration files
-- [ ] Generate development service account key
-- [ ] Update backend `.env` with development credentials
-- [ ] Test development authentication
-
-### **Production Setup**
-- [ ] Create `luma-pregnancy-assistant-prod` Firebase project
-- [ ] Enable Google Sign-in in production project
-- [ ] Download production configuration files
-- [ ] Generate production service account key
-- [ ] Update backend `.env` with production credentials
-- [ ] Test production authentication
+### **Initial Setup**
+- [ ] Firebase project `luma-pregnancy-assistant` exists
+- [ ] Google Sign-in enabled in Firebase Console
+- [ ] Android app configured with package name `com.luma.luma`
+- [ ] iOS app configured with bundle ID `com.luma.luma`
+- [ ] SHA fingerprints added to Firebase Console (Android)
+- [ ] `google-services.json` downloaded and placed in `luma/android/app/`
+- [ ] `GoogleService-Info.plist` downloaded and placed in `luma/ios/Runner/`
 
 ### **Verification**
-- [ ] Development users appear only in dev Firebase project
-- [ ] Production users appear only in prod Firebase project
-- [ ] Backend logs show correct Firebase project
-- [ ] Flutter app logs show correct environment
-- [ ] Authentication works in both environments
+- [ ] Flutter app builds successfully
+- [ ] Google Sign-In works in debug mode
+- [ ] Google Sign-In works in release mode (if tested)
+- [ ] Users appear in Firebase Console → Authentication
+- [ ] Backend authentication works correctly
 
 ---
 
-**🎉 You now have complete environment separation for your Firebase authentication!**
+**📝 Note**: This setup uses a single Firebase project for simplicity. If you need separate development and production environments in the future, you would need to:
+1. Create separate Firebase projects
+2. Implement environment-based file switching in build configuration
+3. Update the configuration management code

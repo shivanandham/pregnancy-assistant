@@ -8,7 +8,11 @@ import '../config/api_config.dart';
 
 class AuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
-  static final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // Configure Google Sign-In with Web Client ID from google-services.json
+  // Web Client ID: 607143667861-9j0e1tf0vj3qjb6v65rltr9i7qd1vuk5.apps.googleusercontent.com
+  static final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
   
   // Storage keys
   static const String _sessionTokenKey = 'session_token';

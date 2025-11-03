@@ -8,7 +8,10 @@ class TestAuthService {
   static String get _backendUrl => FirebaseConfig.backendUrl;
   
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // Configure Google Sign-In with Web Client ID from google-services.json
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
 
   /// Test Google Sign-in and backend integration
   Future<Map<String, dynamic>> testGoogleSignIn() async {
